@@ -74,8 +74,17 @@ auth.onAuthStateChanged(async (user) => {
   state.user = user;
   state.config = { ...DEFAULT_CONFIG, ...(await loadKey("config", {})) };
   const savedPlans = await loadKey("plans", null);
-  state.plans = savedPlans && savedPlans.length > 0 ? savedPlans : DEFAULT_PLANS;
-  if (!savedPlans) saveKey("plans", DEFAULT_PLANS);
+  if (savedPlans && savedPlans.length > 0) {
+    // Adiciona os treinos padrão novos (ex: Casa, Pliometria, Alongamento) que ainda
+    // não existem na lista salva, sem mexer nos treinos que a pessoa já personalizou.
+    const existingIds = new Set(savedPlans.map((p) => p.id));
+    const missingDefaults = DEFAULT_PLANS.filter((p) => !existingIds.has(p.id));
+    state.plans = missingDefaults.length > 0 ? [...savedPlans, ...missingDefaults] : savedPlans;
+    if (missingDefaults.length > 0) await saveKey("plans", state.plans);
+  } else {
+    state.plans = DEFAULT_PLANS;
+    await saveKey("plans", DEFAULT_PLANS);
+  }
   await loadDayData();
   await computeStreak();
   render();
@@ -361,16 +370,18 @@ function renderTreino() {
             </button>
           `).join("")}
         </div>
-        <div style="display:flex;gap:14px;margin-top:12px;">
-          <button data-action="show-manager" style="background:none;border:none;color:var(--text-faint);font-size:11.5px;display:flex;align-items:center;gap:4px;">
-            ${icon("pencil", 12)} Gerenciar treinos
-          </button>
-          <button data-action="toggle-workout-gen-form" style="background:none;border:none;color:var(--accent-energy);font-size:11.5px;display:flex;align-items:center;gap:4px;font-weight:700;">
-            ${icon("dumbbell", 12)} Gerar treino automaticamente
-          </button>
-        </div>
       </div>`;
   }
+
+  html += `
+    <div style="display:flex;gap:14px;">
+      <button data-action="show-manager" style="background:none;border:none;color:var(--text-faint);font-size:11.5px;display:flex;align-items:center;gap:4px;">
+        ${icon("pencil", 12)} Gerenciar treinos
+      </button>
+      <button data-action="toggle-workout-gen-form" style="background:none;border:none;color:var(--accent-energy);font-size:11.5px;display:flex;align-items:center;gap:4px;font-weight:700;">
+        ${icon("dumbbell", 12)} Gerar treino automaticamente
+      </button>
+    </div>`;
 
   if (state.showWorkoutGenForm) html += renderWorkoutGenerator();
 
