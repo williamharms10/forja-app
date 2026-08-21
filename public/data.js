@@ -304,6 +304,81 @@ function getSubstitutes(foodName, limit) {
   return FOOD_DB.filter((f) => FOOD_GROUP[f.name] === group && f.name !== foodName).slice(0, limit || 6);
 }
 
+// Recomendação padrão nutricional: 35ml de água por kg de peso corporal
+function calcWaterGoal(kg) {
+  if (!kg || kg <= 0) return 0;
+  return Math.round((kg * 35) / 50) * 50;
+}
+
+/* ---------------- GERADOR AUTOMÁTICO DE TREINO (100% local, sem IA/API paga) ---------------- */
+const SPLIT_TEMPLATES = {
+  2: [
+    { label: "Treino A — Corpo todo", muscles: ["Peito", "Costas", "Perna"] },
+    { label: "Treino B — Corpo todo", muscles: ["Ombro", "Braço", "Core", "Perna"] },
+  ],
+  3: [
+    { label: "Treino A — Peito e Tríceps", muscles: ["Peito", "Braço"] },
+    { label: "Treino B — Costas e Bíceps", muscles: ["Costas", "Braço"] },
+    { label: "Treino C — Perna e Ombro", muscles: ["Perna", "Ombro"] },
+  ],
+  4: [
+    { label: "Treino A — Peito e Tríceps", muscles: ["Peito", "Braço"] },
+    { label: "Treino B — Costas e Bíceps", muscles: ["Costas", "Braço"] },
+    { label: "Treino C — Perna", muscles: ["Perna"] },
+    { label: "Treino D — Ombro e Core", muscles: ["Ombro", "Core"] },
+  ],
+  5: [
+    { label: "Treino A — Peito", muscles: ["Peito"] },
+    { label: "Treino B — Costas", muscles: ["Costas"] },
+    { label: "Treino C — Perna", muscles: ["Perna"] },
+    { label: "Treino D — Ombro", muscles: ["Ombro"] },
+    { label: "Treino E — Braço e Core", muscles: ["Braço", "Core"] },
+  ],
+  6: [
+    { label: "Treino A — Peito", muscles: ["Peito"] },
+    { label: "Treino B — Costas", muscles: ["Costas"] },
+    { label: "Treino C — Perna", muscles: ["Perna"] },
+    { label: "Treino D — Ombro", muscles: ["Ombro"] },
+    { label: "Treino E — Braço", muscles: ["Braço"] },
+    { label: "Treino F — Core e Cardio", muscles: ["Core", "Cardio"] },
+  ],
+};
+
+function generateWorkoutSplit(form) {
+  const dias = Math.min(6, Math.max(2, Number(form.dias) || 3));
+  const templates = SPLIT_TEMPLATES[dias];
+  const local = form.local || "Ambos";
+  const objetivo = form.objetivo || "Manutenção";
+
+  // Objetivo define volume/intensidade: emagrecimento = mais reps e menos descanso (cardio extra),
+  // ganho de massa = mais séries e reps moderadas, manutenção = equilibrado.
+  let sets, reps;
+  if (objetivo === "Emagrecimento") { sets = 3; reps = 15; }
+  else if (objetivo === "Ganho de massa") { sets = 4; reps = 10; }
+  else { sets = 3; reps = 12; }
+
+  const pool = local === "Ambos" ? EXERCISE_DB : EXERCISE_DB.filter((e) => e.local === local || e.local === "Ambos");
+
+  return templates.map((tpl, idx) => {
+    let exercises = [];
+    tpl.muscles.forEach((m) => {
+      const candidates = pool.filter((e) => e.muscle === m);
+      const perMuscle = Math.max(2, Math.floor(6 / tpl.muscles.length));
+      exercises = exercises.concat(candidates.slice(0, perMuscle));
+    });
+    if (objetivo === "Emagrecimento") {
+      const extra = pool.filter((e) => e.muscle === "Pliometria" || e.muscle === "Cardio");
+      if (extra.length > 0) exercises.push(extra[idx % extra.length]);
+    }
+    exercises = exercises.slice(0, 6);
+    return {
+      id: uid(), name: tpl.label, muscle: tpl.muscles[0],
+      exercises: exercises.map((e) => ({ name: e.name, muscle: e.muscle })),
+      genSets: sets, genReps: reps,
+    };
+  });
+}
+
 function findFood(name) {
   return FOOD_DB.find((f) => f.name === name);
 }

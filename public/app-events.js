@@ -63,6 +63,29 @@ function handleTabClick(e) {
       break;
     }
     case "show-manager": state.showManager = true; render(); break;
+    case "toggle-workout-gen-form":
+      state.showWorkoutGenForm = !state.showWorkoutGenForm;
+      if (state.showWorkoutGenForm && state.aiForm.objetivo) {
+        state.workoutGenForm.objetivo = state.aiForm.objetivo;
+      }
+      state.workoutGenResult = null;
+      render();
+      break;
+    case "gerar-treino-auto":
+      state.workoutGenResult = generateWorkoutSplit(state.workoutGenForm);
+      render();
+      break;
+    case "apply-workout-gen": {
+      const next = [...state.plans, ...state.workoutGenResult];
+      saveKey("plans", next).then(() => {
+        state.plans = next;
+        state.workoutGenResult = null;
+        state.showWorkoutGenForm = false;
+        render();
+      });
+      break;
+    }
+    case "discard-workout-gen": state.workoutGenResult = null; render(); break;
     case "close-manager": state.showManager = false; render(); break;
     case "trocar-treino": trocarTreino(); break;
     case "remove-exercise": removeExercise(btn.dataset.ex); break;
@@ -134,6 +157,7 @@ function handleTabClick(e) {
     case "add-water": updateWater(state.water + Number(btn.dataset.ml)).then(render); break;
     case "add-custom-water": addCustomWater(); break;
     case "toggle-water-goal-edit": state.showWaterGoalEdit = !state.showWaterGoalEdit; render(); break;
+    case "apply-suggested-water-goal": updateConfig({ waterGoal: Number(btn.dataset.value) }).then(render); break;
     case "toggle-weight-goal-edit": state.showWeightGoalEdit = !state.showWeightGoalEdit; render(); break;
     case "save-weight": saveWeight(); break;
   }
@@ -195,9 +219,11 @@ function setupFoodSearch() {
 
 /* ---------------- TREINO: AÇÕES ---------------- */
 function startPlan(plan) {
+  const numSets = plan.genSets || 3;
+  const numReps = plan.genReps || 10;
   const seeded = plan.exercises.map((ex) => ({
     id: uid(), name: ex.name, muscle: ex.muscle,
-    sets: [{ reps: 10, weight: 0, done: false }, { reps: 10, weight: 0, done: false }, { reps: 10, weight: 0, done: false }],
+    sets: Array.from({ length: numSets }, () => ({ reps: numReps, weight: 0, done: false })),
   }));
   updateWorkout(seeded).then(async () => {
     state.dayPlanName = plan.name;

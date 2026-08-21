@@ -14,6 +14,9 @@ const state = {
   showManager: false,
   extraLocalFilter: "Ambos",
   newPlanLocalFilter: "Ambos",
+  showWorkoutGenForm: false,
+  workoutGenForm: { objetivo: "Manutenção", local: "Ambos", dias: 3 },
+  workoutGenResult: null,
   showExtraExerciseForm: false,
   showMealForm: false,
   showCustomFood: false,
@@ -358,11 +361,18 @@ function renderTreino() {
             </button>
           `).join("")}
         </div>
-        <button data-action="show-manager" style="margin-top:12px;background:none;border:none;color:var(--text-faint);font-size:11.5px;display:flex;align-items:center;gap:4px;">
-          ${icon("pencil", 12)} Gerenciar treinos
-        </button>
+        <div style="display:flex;gap:14px;margin-top:12px;">
+          <button data-action="show-manager" style="background:none;border:none;color:var(--text-faint);font-size:11.5px;display:flex;align-items:center;gap:4px;">
+            ${icon("pencil", 12)} Gerenciar treinos
+          </button>
+          <button data-action="toggle-workout-gen-form" style="background:none;border:none;color:var(--accent-energy);font-size:11.5px;display:flex;align-items:center;gap:4px;font-weight:700;">
+            ${icon("dumbbell", 12)} Gerar treino automaticamente
+          </button>
+        </div>
       </div>`;
   }
+
+  if (state.showWorkoutGenForm) html += renderWorkoutGenerator();
 
   if (state.dayPlanName) {
     html += `
@@ -503,6 +513,56 @@ function renderPlanManager() {
           ${icon("plus", 13)} Criar novo treino
         </button>
       `}
+    </div>`;
+}
+
+function renderWorkoutGenerator() {
+  const f = state.workoutGenForm;
+  return `
+    <div class="card" style="border-color:var(--accent-energy);">
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <div>
+          <div style="font-weight:800;font-size:13.5px;">Gerar treino automaticamente</div>
+          <div style="font-size:11px;color:var(--text-muted);margin-top:2px;">Divisão montada com base no seu objetivo (grátis)</div>
+        </div>
+        <button data-action="toggle-workout-gen-form" style="background:var(--accent-energy);color:#14161A;border:none;border-radius:10px;padding:8px 14px;font-weight:800;font-size:12px;">Fechar</button>
+      </div>
+
+      <div style="margin-top:14px;display:flex;flex-direction:column;gap:8px;">
+        <div>
+          <label style="font-size:10.5px;color:var(--text-faint);">Objetivo (mesmo da dieta)</label>
+          <select id="wg-objetivo" data-model="workoutGenForm.objetivo">${selectOptionsHTML(["Emagrecimento", "Manutenção", "Ganho de massa"], f.objetivo)}</select>
+        </div>
+        <div style="display:flex;gap:8px;">
+          <div style="flex:1;">
+            <label style="font-size:10.5px;color:var(--text-faint);">Onde treina</label>
+            <select id="wg-local" data-model="workoutGenForm.local">${selectOptionsHTML(LOCAIS, f.local)}</select>
+          </div>
+          <div style="flex:1;">
+            <label style="font-size:10.5px;color:var(--text-faint);">Dias por semana</label>
+            <input type="number" id="wg-dias" data-model="workoutGenForm.dias" value="${f.dias}" min="2" max="6" />
+          </div>
+        </div>
+        <button data-action="gerar-treino-auto" class="btn-primary" style="background:var(--accent-energy);margin-top:4px;">Gerar divisão de treino</button>
+
+        ${state.workoutGenResult ? `
+          <div style="margin-top:6px;padding-top:10px;border-top:1px solid var(--border);display:flex;flex-direction:column;gap:8px;">
+            ${state.workoutGenResult.map((p) => `
+              <div style="font-size:12px;">
+                <div style="display:flex;justify-content:space-between;">
+                  <span style="font-weight:700;">${escapeHtml(p.name)}</span>
+                  <span style="color:var(--text-faint);">${p.genSets}x${p.genReps}</span>
+                </div>
+                <div style="font-size:10.5px;color:var(--text-faint);margin-top:2px;">${p.exercises.map((e) => e.name).join(", ")}</div>
+              </div>
+            `).join("")}
+            <div style="display:flex;gap:8px;margin-top:4px;">
+              <button data-action="apply-workout-gen" class="btn-primary" style="flex:1;">Adicionar aos meus treinos</button>
+              <button data-action="discard-workout-gen" class="btn-secondary">Descartar</button>
+            </div>
+          </div>
+        ` : ""}
+      </div>
     </div>`;
 }
 
@@ -770,6 +830,15 @@ function renderAgua() {
         <span style="font-size:12px;color:var(--text-muted);font-weight:700;">Meta diária de água</span>
         <button data-action="toggle-water-goal-edit" style="background:none;border:none;color:var(--text-faint);display:flex;align-items:center;gap:4px;font-size:11px;">${icon("pencil", 12)} Editar</button>
       </div>
+      ${state.config.currentWeight > 0 ? (() => {
+        const suggested = calcWaterGoal(state.config.currentWeight);
+        const alreadySet = suggested === state.config.waterGoal;
+        return `
+          <div style="margin-top:8px;font-size:11px;color:var(--text-faint);">
+            Com base no seu peso (${state.config.currentWeight} kg), a recomendação é <strong style="color:var(--text);">${suggested} ml/dia</strong> (35ml por kg).
+            ${!alreadySet ? `<button data-action="apply-suggested-water-goal" data-value="${suggested}" style="margin-left:6px;background:none;border:none;color:var(--accent-water);font-weight:700;cursor:pointer;text-decoration:underline;">usar essa meta</button>` : ""}
+          </div>`;
+      })() : ""}
       ${state.showWaterGoalEdit ? `<div style="margin-top:10px;">${goalInputHTML("Meta (ml)", "goal-water", state.config.waterGoal)}</div>` : ""}
     </div>
   `;
