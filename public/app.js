@@ -1,4 +1,4 @@
-const DEFAULT_CONFIG = { waterGoal: 2500, calorieGoal: 2200, proteinGoal: 150, carbGoal: 220, fatGoal: 70, weightGoal: 0 };
+const DEFAULT_CONFIG = { waterGoal: 2500, calorieGoal: 2200, proteinGoal: 150, carbGoal: 220, fatGoal: 70, weightGoal: 0, currentWeight: 0 };
 
 const state = {
   user: null,
@@ -12,6 +12,8 @@ const state = {
   dayPlanName: null,
   tab: "resumo",
   showManager: false,
+  extraLocalFilter: "Ambos",
+  newPlanLocalFilter: "Ambos",
   showExtraExerciseForm: false,
   showMealForm: false,
   showCustomFood: false,
@@ -24,6 +26,7 @@ const state = {
   newPlanDraftExercises: [],
   showGoalsEdit: false,
   showWaterGoalEdit: false,
+  swapTarget: null,
   mealForm: { name: "" },
   customFood: { name: "", kcal: "", protein: "", carb: "", fat: "" },
   extraExerciseForm: { name: "", muscle: MUSCLES[0], sets: 3, reps: 10, weight: 0 },
@@ -419,6 +422,11 @@ function renderTreino() {
       <div class="card">
         <div style="font-weight:700;font-size:13px;margin-bottom:10px;">Novo exercício</div>
         <div style="display:flex;flex-direction:column;gap:8px;">
+          <div style="display:flex;gap:6px;">
+            ${LOCAIS.map((l) => `
+              <button type="button" data-action="set-extra-local-filter" data-local="${l}" style="flex:1;background:${state.extraLocalFilter === l ? "var(--accent-energy)" : "var(--surface-2)"};color:${state.extraLocalFilter === l ? "#14161A" : "var(--text-muted)"};border:1px solid var(--border);border-radius:8px;padding:6px 0;font-size:11px;font-weight:700;">${l}</button>
+            `).join("")}
+          </div>
           <div style="position:relative;">
             <input id="extra-ex-name" data-model="extraExerciseForm.name" value="${escapeHtml(state.extraExerciseForm.name)}" placeholder="Buscar exercício (ex: Supino reto)" autocomplete="off" />
             <div id="extra-ex-suggestions"></div>
@@ -468,6 +476,11 @@ function renderPlanManager() {
         <div style="display:flex;flex-direction:column;gap:8px;padding-top:10px;border-top:1px solid var(--border);">
           <input id="new-plan-name" data-model="newPlanForm.name" value="${escapeHtml(state.newPlanForm.name)}" placeholder="Nome do treino (ex: Treino E — Braço)" />
           <select id="new-plan-muscle" data-model="newPlanForm.muscle">${selectOptionsHTML(MUSCLES, state.newPlanForm.muscle)}</select>
+          <div style="display:flex;gap:6px;">
+            ${LOCAIS.map((l) => `
+              <button type="button" data-action="set-newplan-local-filter" data-local="${l}" style="flex:1;background:${state.newPlanLocalFilter === l ? "var(--accent-energy)" : "var(--surface-2)"};color:${state.newPlanLocalFilter === l ? "#14161A" : "var(--text-muted)"};border:1px solid var(--border);border-radius:8px;padding:6px 0;font-size:11px;font-weight:700;">${l}</button>
+            `).join("")}
+          </div>
           <div style="position:relative;">
             <input id="new-plan-ex-query" placeholder="Buscar exercício pra adicionar" autocomplete="off" />
             <div id="new-plan-ex-suggestions"></div>
@@ -540,10 +553,37 @@ function renderDieta() {
           <div style="flex:1;">
             <div style="font-weight:700;font-size:13.5px;">${escapeHtml(m.name)}</div>
             <div style="font-size:11px;color:var(--text-faint);margin-top:2px;">${m.time} · ${m.calories} kcal · P ${m.protein}g · C ${m.carb}g · G ${m.fat}g</div>
-            ${m.items && m.items.length ? `<div style="font-size:10.5px;color:var(--text-faint);margin-top:4px;">${m.items.map((it) => `${escapeHtml(it.name)} (${it.grams}g)`).join(" · ")}</div>` : ""}
           </div>
           <button class="icon-btn" data-action="remove-meal" data-meal="${m.id}" style="color:#FF5C5C;">${icon("trash", 13)}</button>
         </div>
+        ${m.items && m.items.length ? `
+          <div style="margin-top:8px;display:flex;flex-direction:column;gap:4px;">
+            ${m.items.map((it, i) => {
+              const subs = getSubstitutes(it.name);
+              const pickerOpen = state.swapTarget && state.swapTarget.mealId === m.id && state.swapTarget.idx === i;
+              return `
+                <div>
+                  <div style="display:flex;justify-content:space-between;align-items:center;font-size:10.5px;color:var(--text-faint);">
+                    <span>${escapeHtml(it.name)} (${it.grams}g)</span>
+                    ${subs.length > 0 ? `
+                      <button data-action="toggle-swap-picker" data-meal="${m.id}" data-idx="${i}" style="background:none;border:none;color:${pickerOpen ? "var(--accent-food)" : "var(--text-faint)"};display:flex;align-items:center;gap:3px;padding:2px 4px;">
+                        ${icon("swap", 11)} <span style="font-size:9.5px;">trocar</span>
+                      </button>
+                    ` : ""}
+                  </div>
+                  ${pickerOpen ? `
+                    <div style="display:flex;flex-wrap:wrap;gap:5px;margin:5px 0 2px;padding:8px;background:var(--surface-2);border-radius:8px;">
+                      ${subs.map((s) => `
+                        <button data-action="swap-food-item" data-meal="${m.id}" data-idx="${i}" data-newname="${escapeHtml(s.name)}" style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:5px 9px;font-size:10.5px;color:var(--text);">
+                          ${escapeHtml(s.name)} <span style="color:var(--text-faint);">· ${s.kcal} kcal/100g</span>
+                        </button>
+                      `).join("")}
+                    </div>
+                  ` : ""}
+                </div>`;
+            }).join("")}
+          </div>
+        ` : ""}
       </div>
     `).join("")}
 
@@ -628,6 +668,15 @@ function renderGeradorDieta() {
       </div>
       ${state.showAiForm ? `
         <div style="margin-top:14px;display:flex;flex-direction:column;gap:8px;">
+          ${state.config.currentWeight > 0 ? `
+            <div style="font-size:11px;color:var(--text-muted);background:var(--surface-2);border-radius:8px;padding:8px 10px;">
+              Usando seu peso registrado (<strong style="color:var(--text);">${state.config.currentWeight} kg</strong>)${state.config.weightGoal > 0 ? ` e meta (<strong style="color:var(--text);">${state.config.weightGoal} kg</strong>)` : ""} pra ajustar o cálculo. Pode alterar abaixo se quiser.
+            </div>
+          ` : `
+            <div style="font-size:11px;color:var(--text-faint);background:var(--surface-2);border-radius:8px;padding:8px 10px;">
+              Você ainda não registrou seu peso na aba Progresso — usando o valor digitado abaixo.
+            </div>
+          `}
           <select id="ai-objetivo" data-model="aiForm.objetivo">${selectOptionsHTML(["Emagrecimento", "Manutenção", "Ganho de massa"], state.aiForm.objetivo)}</select>
           <div style="display:flex;gap:8px;">
             <div style="flex:1;"><label style="font-size:10.5px;color:var(--text-faint);">Peso (kg)</label><input type="number" id="ai-peso" data-model="aiForm.peso" value="${state.aiForm.peso}" /></div>

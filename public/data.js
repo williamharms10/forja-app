@@ -1,8 +1,10 @@
-const MUSCLES = ["Peito", "Costas", "Perna", "Ombro", "Braço", "Core", "Cardio"];
+const MUSCLES = ["Peito", "Costas", "Perna", "Ombro", "Braço", "Core", "Cardio", "Pliometria", "Alongamento"];
 const MUSCLE_COLOR = {
   Peito: "#FF7A52", Costas: "#4FA8FF", Perna: "#C8FF4D",
   Ombro: "#FFD166", Braço: "#FF5C8A", Core: "#8B8F97", Cardio: "#4FE3C2",
+  Pliometria: "#FF3B5C", Alongamento: "#7FD8E8",
 };
+const LOCAIS = ["Ambos", "Academia", "Casa"];
 
 // Valores por 100g — baseados na Tabela Brasileira de Composição de Alimentos (TACO/UNICAMP)
 // e referências nutricionais padrão (USDA) para itens não brasileiros.
@@ -86,59 +88,104 @@ const FOOD_DB = [
 
 // Biblioteca de exercícios por grupo muscular (referência de treino de força comum em academias)
 const EXERCISE_DB = [
-  { name: "Supino reto", muscle: "Peito" },
-  { name: "Supino inclinado", muscle: "Peito" },
-  { name: "Supino declinado", muscle: "Peito" },
-  { name: "Crucifixo reto", muscle: "Peito" },
-  { name: "Crossover", muscle: "Peito" },
-  { name: "Flexão de braço", muscle: "Peito" },
-  { name: "Peck deck (voador)", muscle: "Peito" },
-  { name: "Puxada frontal (pulley)", muscle: "Costas" },
-  { name: "Remada curvada", muscle: "Costas" },
-  { name: "Remada baixa (cabo)", muscle: "Costas" },
-  { name: "Remada unilateral (serrote)", muscle: "Costas" },
-  { name: "Barra fixa", muscle: "Costas" },
-  { name: "Levantamento terra", muscle: "Costas" },
-  { name: "Pulldown", muscle: "Costas" },
-  { name: "Hiperextensão lombar", muscle: "Costas" },
-  { name: "Agachamento livre", muscle: "Perna" },
-  { name: "Agachamento no smith", muscle: "Perna" },
-  { name: "Leg press 45°", muscle: "Perna" },
-  { name: "Cadeira extensora", muscle: "Perna" },
-  { name: "Mesa flexora", muscle: "Perna" },
-  { name: "Cadeira flexora", muscle: "Perna" },
-  { name: "Afundo (passada)", muscle: "Perna" },
-  { name: "Stiff", muscle: "Perna" },
-  { name: "Panturrilha em pé", muscle: "Perna" },
-  { name: "Panturrilha sentado", muscle: "Perna" },
-  { name: "Cadeira adutora", muscle: "Perna" },
-  { name: "Cadeira abdutora", muscle: "Perna" },
-  { name: "Desenvolvimento militar", muscle: "Ombro" },
-  { name: "Desenvolvimento Arnold", muscle: "Ombro" },
-  { name: "Elevação lateral", muscle: "Ombro" },
-  { name: "Elevação frontal", muscle: "Ombro" },
-  { name: "Remada alta", muscle: "Ombro" },
-  { name: "Face pull", muscle: "Ombro" },
-  { name: "Encolhimento de trapézio", muscle: "Ombro" },
-  { name: "Rosca direta (barra)", muscle: "Braço" },
-  { name: "Rosca alternada (halteres)", muscle: "Braço" },
-  { name: "Rosca martelo", muscle: "Braço" },
-  { name: "Rosca scott", muscle: "Braço" },
-  { name: "Tríceps testa", muscle: "Braço" },
-  { name: "Tríceps corda (pulley)", muscle: "Braço" },
-  { name: "Tríceps francês", muscle: "Braço" },
-  { name: "Mergulho no banco (dips)", muscle: "Braço" },
-  { name: "Abdominal supra", muscle: "Core" },
-  { name: "Abdominal infra", muscle: "Core" },
-  { name: "Prancha", muscle: "Core" },
-  { name: "Elevação de pernas", muscle: "Core" },
-  { name: "Russian twist", muscle: "Core" },
-  { name: "Esteira (corrida/caminhada)", muscle: "Cardio" },
-  { name: "Bicicleta ergométrica", muscle: "Cardio" },
-  { name: "Elíptico", muscle: "Cardio" },
-  { name: "Pular corda", muscle: "Cardio" },
-  { name: "HIIT", muscle: "Cardio" },
-  { name: "Remo (ergômetro)", muscle: "Cardio" },
+  // Peito
+  { name: "Supino reto", muscle: "Peito", local: "Academia" },
+  { name: "Supino inclinado", muscle: "Peito", local: "Academia" },
+  { name: "Supino declinado", muscle: "Peito", local: "Academia" },
+  { name: "Crucifixo reto", muscle: "Peito", local: "Academia" },
+  { name: "Crossover", muscle: "Peito", local: "Academia" },
+  { name: "Flexão de braço", muscle: "Peito", local: "Ambos" },
+  { name: "Flexão diamante", muscle: "Peito", local: "Ambos" },
+  { name: "Flexão inclinada", muscle: "Peito", local: "Ambos" },
+  { name: "Flexão declinada (pés elevados)", muscle: "Peito", local: "Ambos" },
+  { name: "Peck deck (voador)", muscle: "Peito", local: "Academia" },
+  // Costas
+  { name: "Puxada frontal (pulley)", muscle: "Costas", local: "Academia" },
+  { name: "Remada curvada", muscle: "Costas", local: "Academia" },
+  { name: "Remada baixa (cabo)", muscle: "Costas", local: "Academia" },
+  { name: "Remada unilateral (serrote)", muscle: "Costas", local: "Academia" },
+  { name: "Barra fixa", muscle: "Costas", local: "Ambos" },
+  { name: "Levantamento terra", muscle: "Costas", local: "Academia" },
+  { name: "Pulldown", muscle: "Costas", local: "Academia" },
+  { name: "Hiperextensão lombar", muscle: "Costas", local: "Academia" },
+  { name: "Superman (extensão lombar no chão)", muscle: "Costas", local: "Ambos" },
+  // Perna
+  { name: "Agachamento livre", muscle: "Perna", local: "Ambos" },
+  { name: "Agachamento no smith", muscle: "Perna", local: "Academia" },
+  { name: "Agachamento sumô", muscle: "Perna", local: "Ambos" },
+  { name: "Leg press 45°", muscle: "Perna", local: "Academia" },
+  { name: "Cadeira extensora", muscle: "Perna", local: "Academia" },
+  { name: "Mesa flexora", muscle: "Perna", local: "Academia" },
+  { name: "Cadeira flexora", muscle: "Perna", local: "Academia" },
+  { name: "Afundo (passada)", muscle: "Perna", local: "Ambos" },
+  { name: "Afundo búlgaro", muscle: "Perna", local: "Ambos" },
+  { name: "Stiff", muscle: "Perna", local: "Ambos" },
+  { name: "Panturrilha em pé", muscle: "Perna", local: "Ambos" },
+  { name: "Panturrilha sentado", muscle: "Perna", local: "Academia" },
+  { name: "Panturrilha unilateral", muscle: "Perna", local: "Ambos" },
+  { name: "Cadeira adutora", muscle: "Perna", local: "Academia" },
+  { name: "Cadeira abdutora", muscle: "Perna", local: "Academia" },
+  { name: "Elevação de quadril (ponte de glúteo)", muscle: "Perna", local: "Ambos" },
+  { name: "Cadeira na parede (wall sit)", muscle: "Perna", local: "Ambos" },
+  // Ombro
+  { name: "Desenvolvimento militar", muscle: "Ombro", local: "Academia" },
+  { name: "Desenvolvimento Arnold", muscle: "Ombro", local: "Academia" },
+  { name: "Elevação lateral", muscle: "Ombro", local: "Ambos" },
+  { name: "Elevação frontal", muscle: "Ombro", local: "Ambos" },
+  { name: "Remada alta", muscle: "Ombro", local: "Academia" },
+  { name: "Face pull", muscle: "Ombro", local: "Academia" },
+  { name: "Encolhimento de trapézio", muscle: "Ombro", local: "Academia" },
+  // Braço
+  { name: "Rosca direta (barra)", muscle: "Braço", local: "Academia" },
+  { name: "Rosca alternada (halteres)", muscle: "Braço", local: "Academia" },
+  { name: "Rosca martelo", muscle: "Braço", local: "Academia" },
+  { name: "Rosca scott", muscle: "Braço", local: "Academia" },
+  { name: "Tríceps testa", muscle: "Braço", local: "Academia" },
+  { name: "Tríceps corda (pulley)", muscle: "Braço", local: "Academia" },
+  { name: "Tríceps francês", muscle: "Braço", local: "Academia" },
+  { name: "Mergulho no banco (dips)", muscle: "Braço", local: "Ambos" },
+  { name: "Dips entre duas cadeiras", muscle: "Braço", local: "Casa" },
+  // Core
+  { name: "Abdominal supra", muscle: "Core", local: "Ambos" },
+  { name: "Abdominal infra", muscle: "Core", local: "Ambos" },
+  { name: "Prancha", muscle: "Core", local: "Ambos" },
+  { name: "Prancha lateral", muscle: "Core", local: "Ambos" },
+  { name: "Elevação de pernas", muscle: "Core", local: "Ambos" },
+  { name: "Russian twist", muscle: "Core", local: "Ambos" },
+  { name: "Mountain climber", muscle: "Core", local: "Ambos" },
+  { name: "Bicicleta abdominal", muscle: "Core", local: "Ambos" },
+  // Cardio
+  { name: "Esteira (corrida/caminhada)", muscle: "Cardio", local: "Academia" },
+  { name: "Bicicleta ergométrica", muscle: "Cardio", local: "Academia" },
+  { name: "Elíptico", muscle: "Cardio", local: "Academia" },
+  { name: "Pular corda", muscle: "Cardio", local: "Ambos" },
+  { name: "HIIT", muscle: "Cardio", local: "Ambos" },
+  { name: "Remo (ergômetro)", muscle: "Cardio", local: "Academia" },
+  { name: "Corrida com elevação de joelhos (high knees)", muscle: "Cardio", local: "Ambos" },
+  // Pliometria (movimentos explosivos)
+  { name: "Agachamento com salto (jump squat)", muscle: "Pliometria", local: "Ambos" },
+  { name: "Salto na caixa (box jump)", muscle: "Pliometria", local: "Academia" },
+  { name: "Burpee", muscle: "Pliometria", local: "Ambos" },
+  { name: "Avanço com salto (jump lunge)", muscle: "Pliometria", local: "Ambos" },
+  { name: "Polichinelo", muscle: "Pliometria", local: "Ambos" },
+  { name: "Flexão com palmas (clap push-up)", muscle: "Pliometria", local: "Ambos" },
+  { name: "Salto lateral (skater jump)", muscle: "Pliometria", local: "Ambos" },
+  { name: "Salto em distância (broad jump)", muscle: "Pliometria", local: "Ambos" },
+  { name: "Tuck jump (joelhos ao peito)", muscle: "Pliometria", local: "Ambos" },
+  { name: "Corrida estacionária explosiva", muscle: "Pliometria", local: "Ambos" },
+  // Alongamento
+  { name: "Alongamento de isquiotibiais", muscle: "Alongamento", local: "Ambos" },
+  { name: "Alongamento de quadríceps", muscle: "Alongamento", local: "Ambos" },
+  { name: "Alongamento de panturrilha", muscle: "Alongamento", local: "Ambos" },
+  { name: "Alongamento de peitoral", muscle: "Alongamento", local: "Ambos" },
+  { name: "Alongamento de ombros (cruzado)", muscle: "Alongamento", local: "Ambos" },
+  { name: "Alongamento de tríceps", muscle: "Alongamento", local: "Ambos" },
+  { name: "Alongamento de pescoço", muscle: "Alongamento", local: "Ambos" },
+  { name: "Alongamento lombar (joelhos ao peito)", muscle: "Alongamento", local: "Ambos" },
+  { name: "Gato-vaca (mobilidade de coluna)", muscle: "Alongamento", local: "Ambos" },
+  { name: "Alongamento de adutores", muscle: "Alongamento", local: "Ambos" },
+  { name: "Alongamento de flexores do quadril", muscle: "Alongamento", local: "Ambos" },
+  { name: "Torção de tronco sentado", muscle: "Alongamento", local: "Ambos" },
 ];
 
 const DEFAULT_PLANS = [
@@ -182,9 +229,81 @@ const DEFAULT_PLANS = [
       { name: "Prancha", muscle: "Core" },
     ],
   },
+  {
+    id: "planE", name: "Treino E — Casa (sem equipamento)", muscle: "Perna",
+    exercises: [
+      { name: "Agachamento livre", muscle: "Perna" },
+      { name: "Flexão de braço", muscle: "Peito" },
+      { name: "Afundo (passada)", muscle: "Perna" },
+      { name: "Elevação de quadril (ponte de glúteo)", muscle: "Perna" },
+      { name: "Prancha", muscle: "Core" },
+      { name: "Superman (extensão lombar no chão)", muscle: "Costas" },
+    ],
+  },
+  {
+    id: "planF", name: "Treino F — Pliometria e explosão", muscle: "Pliometria",
+    exercises: [
+      { name: "Polichinelo", muscle: "Pliometria" },
+      { name: "Agachamento com salto (jump squat)", muscle: "Pliometria" },
+      { name: "Burpee", muscle: "Pliometria" },
+      { name: "Avanço com salto (jump lunge)", muscle: "Pliometria" },
+      { name: "Salto lateral (skater jump)", muscle: "Pliometria" },
+    ],
+  },
+  {
+    id: "planG", name: "Treino G — Alongamento e mobilidade", muscle: "Alongamento",
+    exercises: [
+      { name: "Alongamento de isquiotibiais", muscle: "Alongamento" },
+      { name: "Alongamento de quadríceps", muscle: "Alongamento" },
+      { name: "Alongamento de panturrilha", muscle: "Alongamento" },
+      { name: "Gato-vaca (mobilidade de coluna)", muscle: "Alongamento" },
+      { name: "Alongamento lombar (joelhos ao peito)", muscle: "Alongamento" },
+      { name: "Alongamento de ombros (cruzado)", muscle: "Alongamento" },
+    ],
+  },
 ];
 
 /* ---------------- GERADOR AUTOMÁTICO DE DIETA (100% local, sem IA/API paga) ---------------- */
+// Agrupamento por categoria nutricional — usado pra sugerir trocas equivalentes
+// (ex: trocar arroz por batata-doce, ambos carboidratos; frango por peixe, ambos proteína).
+const FOOD_GROUP = {
+  "Arroz branco cozido": "carb", "Arroz integral cozido": "carb", "Macarrão cozido": "carb",
+  "Aveia em flocos": "carb", "Pão francês": "carb", "Pão de forma integral": "carb",
+  "Tapioca (goma hidratada)": "carb", "Batata inglesa cozida": "carb", "Batata doce cozida": "carb",
+  "Mandioca cozida": "carb", "Quinoa cozida": "carb", "Granola": "carb",
+
+  "Feijão carioca cozido": "leguminosa", "Feijão preto cozido": "leguminosa",
+  "Lentilha cozida": "leguminosa", "Grão de bico cozido": "leguminosa",
+
+  "Peito de frango grelhado": "proteina", "Frango, coxa/sobrecoxa assada": "proteina",
+  "Carne moída cozida (patinho)": "proteina", "Contra-filé grelhado (sem gordura)": "proteina",
+  "Alcatra grelhada": "proteina", "Carne suína (lombo assado)": "proteina",
+  "Tilápia grelhada": "proteina", "Salmão grelhado": "proteina", "Atum em água (lata)": "proteina",
+  "Camarão cozido": "proteina", "Ovo cozido (unidade ~50g)": "proteina", "Ovo, clara (unidade)": "proteina",
+  "Tofu": "proteina", "Proteína de soja (PTS) hidratada": "proteina",
+
+  "Leite integral": "laticinio", "Leite desnatado": "laticinio", "Iogurte natural integral": "laticinio",
+  "Iogurte grego natural": "laticinio", "Queijo minas frescal": "laticinio", "Queijo muçarela": "laticinio",
+  "Requeijão cremoso": "laticinio", "Whey protein (pó)": "laticinio",
+
+  "Azeite de oliva": "gordura", "Óleo de coco": "gordura", "Manteiga": "gordura",
+  "Pasta de amendoim": "gordura", "Amendoim torrado": "gordura", "Castanha do Pará": "gordura",
+  "Castanha de caju": "gordura", "Amêndoas": "gordura", "Abacate": "gordura",
+
+  "Banana prata": "fruta", "Maçã": "fruta", "Laranja": "fruta", "Mamão": "fruta",
+  "Manga": "fruta", "Morango": "fruta", "Uva": "fruta", "Abacaxi": "fruta", "Melancia": "fruta",
+
+  "Brócolis cozido": "vegetal", "Cenoura crua": "vegetal", "Alface": "vegetal", "Tomate": "vegetal",
+  "Espinafre cozido": "vegetal", "Abobrinha cozida": "vegetal", "Couve refogada": "vegetal",
+  "Pepino": "vegetal", "Beterraba cozida": "vegetal",
+};
+
+function getSubstitutes(foodName, limit) {
+  const group = FOOD_GROUP[foodName];
+  if (!group) return [];
+  return FOOD_DB.filter((f) => FOOD_GROUP[f.name] === group && f.name !== foodName).slice(0, limit || 6);
+}
+
 function findFood(name) {
   return FOOD_DB.find((f) => f.name === name);
 }
@@ -255,15 +374,33 @@ function generateAutoDiet(form) {
   const altura = Number(form.altura) || 170;
   const idade = Number(form.idade) || 30;
   const isMale = form.sexo === "Masculino";
+  const metaPeso = Number(form.metaPeso) || 0;
 
   // Fórmula de Mifflin-St Jeor (padrão nutricional)
   let bmr = 10 * peso + 6.25 * altura - 5 * idade + (isMale ? 5 : -161);
   const activityFactor = { "Sedentário": 1.2, "Leve (1-3x/sem)": 1.375, "Moderado (3-5x/sem)": 1.55, "Intenso (6-7x/sem)": 1.725 }[form.atividade] || 1.375;
   let tdee = bmr * activityFactor;
 
-  let calorieGoal = tdee;
-  if (form.objetivo === "Emagrecimento") calorieGoal -= 500;
-  if (form.objetivo === "Ganho de massa") calorieGoal += 300;
+  // Se a pessoa tem peso atual e meta registrados, calcula o déficit/superávit
+  // proporcional à distância até a meta (mais longe da meta = ajuste um pouco maior,
+  // dentro de limites seguros). Sem meta registrada, usa um valor padrão fixo.
+  const diffToGoal = metaPeso > 0 ? peso - metaPeso : 0;
+  let adjust = 0;
+  if (form.objetivo === "Emagrecimento") {
+    if (diffToGoal > 0) {
+      adjust = -Math.min(750, Math.max(300, Math.round(diffToGoal * 40)));
+    } else {
+      adjust = -500;
+    }
+  } else if (form.objetivo === "Ganho de massa") {
+    if (diffToGoal < 0) {
+      adjust = Math.min(500, Math.max(200, Math.round(Math.abs(diffToGoal) * 25)));
+    } else {
+      adjust = 300;
+    }
+  }
+
+  let calorieGoal = tdee + adjust;
   calorieGoal = Math.max(1200, Math.round(calorieGoal / 10) * 10);
 
   const proteinGoal = Math.round(peso * (form.objetivo === "Ganho de massa" ? 2.2 : 2.0));

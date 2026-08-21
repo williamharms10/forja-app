@@ -11,14 +11,14 @@ function attachTabEvents() {
     state.extraExerciseForm.name = ex.name;
     state.extraExerciseForm.muscle = ex.muscle;
     render();
-  });
+  }, () => state.extraLocalFilter);
 
   setupSearch("new-plan-ex-query", "new-plan-ex-suggestions", EXERCISE_DB, (ex) => ex.name, (ex) => {
     if (!state.newPlanDraftExercises.some((d) => d.name === ex.name)) {
       state.newPlanDraftExercises.push({ name: ex.name, muscle: ex.muscle });
     }
     render();
-  });
+  }, () => state.newPlanLocalFilter);
 
   setupFoodSearch();
 }
@@ -69,6 +69,8 @@ function handleTabClick(e) {
     case "add-set": addSet(btn.dataset.ex); break;
     case "remove-set": removeSet(btn.dataset.ex, Number(btn.dataset.idx)); break;
     case "show-extra-exercise": state.showExtraExerciseForm = true; render(); break;
+    case "set-extra-local-filter": state.extraLocalFilter = btn.dataset.local; render(); break;
+    case "set-newplan-local-filter": state.newPlanLocalFilter = btn.dataset.local; render(); break;
     case "cancel-extra-exercise":
       state.showExtraExerciseForm = false;
       state.extraExerciseForm = { name: "", muscle: MUSCLES[0], sets: 3, reps: 10, weight: 0 };
@@ -108,11 +110,20 @@ function handleTabClick(e) {
     case "remove-draft-item": state.mealDraftItems.splice(Number(btn.dataset.idx), 1); render(); break;
     case "save-meal": saveMeal(); break;
     case "remove-meal": removeMeal(btn.dataset.meal); break;
+    case "toggle-swap-picker": {
+      const mealId = btn.dataset.meal, idx = Number(btn.dataset.idx);
+      const isSame = state.swapTarget && state.swapTarget.mealId === mealId && state.swapTarget.idx === idx;
+      state.swapTarget = isSame ? null : { mealId, idx };
+      render();
+      break;
+    }
+    case "swap-food-item": swapFoodItem(btn.dataset.meal, Number(btn.dataset.idx), btn.dataset.newname); break;
 
     case "toggle-ai-form":
       state.showAiForm = !state.showAiForm;
       state.aiError = "";
       state.aiPlan = null;
+      if (state.showAiForm) syncAiFormFromProfile();
       render();
       break;
     case "gerar-dieta-ia": gerarDietaIA(); break;
@@ -128,19 +139,27 @@ function handleTabClick(e) {
 }
 
 /* ---------------- BUSCA (autocomplete) ---------------- */
-function setupSearch(inputId, boxId, db, nameFn, onPick) {
+function setupSearch(inputId, boxId, db, nameFn, onPick, getLocalFilter) {
   const input = document.getElementById(inputId);
   const box = document.getElementById(boxId);
   if (!input || !box) return;
   input.addEventListener("input", () => {
     const q = normalize(input.value);
     if (!q) { box.innerHTML = ""; return; }
-    const matches = db.filter((item) => normalize(nameFn(item)).includes(q)).slice(0, 6);
+    const localFilter = getLocalFilter ? getLocalFilter() : "Ambos";
+    let pool = db;
+    if (localFilter && localFilter !== "Ambos") {
+      pool = db.filter((item) => item.local === localFilter || item.local === "Ambos");
+    }
+    const matches = pool.filter((item) => normalize(nameFn(item)).includes(q)).slice(0, 6);
     if (matches.length === 0) { box.innerHTML = ""; return; }
     box.innerHTML = `<div class="suggest-box">${matches.map((item, i) => `
       <button type="button" class="suggest-item" data-i="${i}">
         <span style="font-size:12.5px;">${escapeHtml(item.name)}</span>
-        <span style="font-size:10px;font-weight:700;color:${MUSCLE_COLOR[item.muscle] || "var(--text-faint)"};">${item.muscle || ""}</span>
+        <span style="display:flex;align-items:center;gap:6px;">
+          ${item.local ? `<span style="font-size:9.5px;color:var(--text-faint);">${item.local}</span>` : ""}
+          <span style="font-size:10px;font-weight:700;color:${MUSCLE_COLOR[item.muscle] || "var(--text-faint)"};">${item.muscle || ""}</span>
+        </span>
       </button>`).join("")}</div>`;
     box.querySelectorAll(".suggest-item").forEach((b) => {
       b.addEventListener("click", () => { onPick(matches[Number(b.dataset.i)]); });
@@ -290,6 +309,51 @@ function removeMeal(id) {
   updateMeals(state.meals.filter((m) => m.id !== id)).then(render);
 }
 
+function swapFoodItem(mealId, itemIndex, newName) {
+  const mealIdx = state.meals.findIndex((m) => m.id === mealId);
+  if (mealIdx === -1) return;
+  const meal = state.meals[mealIdx];
+  const oldItem = meal.items[itemIndex];
+  const oldFood = findFood(oldItem.name);
+  const newFood = findFood(newName);
+  if (!oldFood || !newFood) return;
+
+  // Ajusta a quantidade do novo alimento pra manter as calorias parecidas com o que foi trocado
+  const oldKcal = (oldFood.kcal * oldItem.grams) / 100;
+  const newGrams = Math.max(5, Math.round((oldKcal / newFood.kcal) * 100 / 5) * 5);
+
+  const newItems = meal.items.map((it, i) => i === itemIndex ? { name: newName, grams: newGrams } : it);
+  const totals = newItems.reduce((acc, it) => {
+    const food = findFood(it.name);
+    if (!food) return acc;
+    const f = it.grams / 100;
+    return { kcal: acc.kcal + food.kcal * f, protein: acc.protein + food.protein * f, carb: acc.carb + food.carb * f, fat: acc.fat + food.fat * f };
+  }, { kcal: 0, protein: 0, carb: 0, fat: 0 });
+
+  const newMeals = state.meals.map((m, i) => i !== mealIdx ? m : {
+    ...m, items: newItems,
+    calories: Math.round(totals.kcal), protein: Math.round(totals.protein),
+    carb: Math.round(totals.carb), fat: Math.round(totals.fat),
+  });
+
+  updateMeals(newMeals).then(() => {
+    state.swapTarget = null;
+    render();
+  });
+}
+
+function syncAiFormFromProfile() {
+  const current = state.config.currentWeight;
+  const goal = state.config.weightGoal;
+  if (current > 0) state.aiForm.peso = current;
+  if (current > 0 && goal > 0) {
+    const diff = current - goal;
+    if (diff > 1) state.aiForm.objetivo = "Emagrecimento";
+    else if (diff < -1) state.aiForm.objetivo = "Ganho de massa";
+    else state.aiForm.objetivo = "Manutenção";
+  }
+}
+
 async function gerarDietaIA() {
   state.aiLoading = true;
   state.aiError = "";
@@ -298,7 +362,8 @@ async function gerarDietaIA() {
   try {
     // Pequeno atraso só pra dar sensação de "processando" — o cálculo em si é instantâneo, local e gratuito.
     await new Promise((resolve) => setTimeout(resolve, 300));
-    const parsed = generateAutoDiet(state.aiForm);
+    const formWithGoal = { ...state.aiForm, metaPeso: state.config.weightGoal };
+    const parsed = generateAutoDiet(formWithGoal);
     if (!parsed.meals || parsed.meals.length === 0) throw new Error("Não foi possível montar o plano.");
     state.aiPlan = parsed;
   } catch (e) {
@@ -346,9 +411,14 @@ function addCustomWater() {
 function saveWeight() {
   const kg = Number(state.weightInput);
   if (!kg || kg <= 0) return;
-  saveKey(`weight:${dk()}`, { kg }).then(() => {
+  saveKey(`weight:${dk()}`, { kg }).then(async () => {
     const idx = state.weightHistory.findIndex((h) => h.date === dk());
     if (idx >= 0) state.weightHistory[idx].kg = kg;
+    // Se for o peso de hoje (ou mais recente que o já guardado), atualiza o perfil
+    // pra esse valor ficar dispon\u00edvel em outras telas (como a gera\u00e7\u00e3o de dieta).
+    if (dk() === dateKey(new Date())) {
+      await updateConfig({ currentWeight: kg });
+    }
     render();
   });
 }
