@@ -317,6 +317,7 @@ function applyAiPlan() {
     id: uid(), name: m.name, time: m.time || "",
     calories: Number(m.calories) || 0, protein: Number(m.protein) || 0,
     carb: Number(m.carb) || 0, fat: Number(m.fat) || 0,
+    items: (m.items || []).map((it) => ({ name: it.name, grams: it.grams })),
   }));
   updateMeals(withIds).then(async () => {
     await updateConfig({

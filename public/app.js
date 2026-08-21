@@ -647,7 +647,13 @@ function renderGeradorDieta() {
           ${state.aiPlan ? `
             <div style="margin-top:6px;padding-top:10px;border-top:1px solid var(--border);display:flex;flex-direction:column;gap:8px;">
               <div style="font-size:12px;font-weight:700;">Total: ${Math.round(state.aiPlan.calorieGoal)} kcal · P ${state.aiPlan.proteinGoal}g · C ${state.aiPlan.carbGoal}g · G ${state.aiPlan.fatGoal}g</div>
-              ${state.aiPlan.meals.map((m) => `<div style="font-size:11.5px;color:var(--text-muted);display:flex;justify-content:space-between;"><span>${m.time ? m.time + " · " : ""}${escapeHtml(m.name)}</span><span>${m.calories} kcal</span></div>`).join("")}
+              ${state.aiPlan.meals.map((m) => `
+                <div style="border-bottom:1px solid var(--border);padding-bottom:8px;">
+                  <div style="font-size:11.5px;color:var(--text-muted);display:flex;justify-content:space-between;font-weight:700;">
+                    <span>${m.time ? m.time + " · " : ""}${escapeHtml(m.name)}</span><span>${m.calories} kcal</span>
+                  </div>
+                  ${m.items && m.items.length ? `<div style="font-size:10.5px;color:var(--text-faint);margin-top:3px;">${m.items.map((it) => `${escapeHtml(it.name)} (${it.grams}g)`).join(" · ")}</div>` : ""}
+                </div>`).join("")}
               <div style="display:flex;gap:8px;margin-top:4px;">
                 <button data-action="apply-ai-plan" class="btn-primary" style="flex:1;background:var(--accent-energy);">Aplicar ao dia (substitui refeições)</button>
                 <button data-action="discard-ai-plan" class="btn-secondary">Descartar</button>
