@@ -32,7 +32,7 @@ const state = {
   extraExerciseForm: { name: "", muscle: MUSCLES[0], sets: 3, reps: 10, weight: 0 },
   newPlanForm: { name: "", muscle: MUSCLES[0] },
   customWaterValue: "",
-  aiForm: { objetivo: "Emagrecimento", peso: 70, altura: 170, idade: 30, sexo: "Feminino", atividade: "Leve (1-3x/sem)", refeicoes: 4, restricoes: "" },
+  aiForm: { objetivo: "Emagrecimento", peso: 70, metaPeso: "", altura: 170, idade: 30, sexo: "Feminino", atividade: "Leve (1-3x/sem)", refeicoes: 4, restricoes: "" },
   weightInput: "",
   showWeightGoalEdit: false,
   progressLoaded: false,
@@ -668,18 +668,33 @@ function renderGeradorDieta() {
       </div>
       ${state.showAiForm ? `
         <div style="margin-top:14px;display:flex;flex-direction:column;gap:8px;">
-          ${state.config.currentWeight > 0 ? `
-            <div style="font-size:11px;color:var(--text-muted);background:var(--surface-2);border-radius:8px;padding:8px 10px;">
-              Usando seu peso registrado (<strong style="color:var(--text);">${state.config.currentWeight} kg</strong>)${state.config.weightGoal > 0 ? ` e meta (<strong style="color:var(--text);">${state.config.weightGoal} kg</strong>)` : ""} pra ajustar o cálculo. Pode alterar abaixo se quiser.
+          <div style="background:var(--surface-2);border:1px solid ${(!state.aiForm.peso || !state.aiForm.metaPeso) ? "#FF7A52" : "var(--border)"};border-radius:10px;padding:10px;">
+            <div style="font-size:11px;font-weight:700;color:var(--text);margin-bottom:8px;">Peso atual e meta (essencial pro cálculo)</div>
+            <div style="display:flex;gap:8px;">
+              <div style="flex:1;">
+                <label style="font-size:10.5px;color:var(--text-faint);">Peso atual (kg)</label>
+                <input type="number" id="ai-peso" data-model="aiForm.peso" value="${state.aiForm.peso}" placeholder="ex: 80" />
+              </div>
+              <div style="flex:1;">
+                <label style="font-size:10.5px;color:var(--text-faint);">Meta de peso (kg)</label>
+                <input type="number" id="ai-meta-peso" data-model="aiForm.metaPeso" value="${state.aiForm.metaPeso}" placeholder="ex: 75" />
+              </div>
             </div>
-          ` : `
-            <div style="font-size:11px;color:var(--text-faint);background:var(--surface-2);border-radius:8px;padding:8px 10px;">
-              Você ainda não registrou seu peso na aba Progresso — usando o valor digitado abaixo.
-            </div>
-          `}
+            ${!state.aiForm.metaPeso ? `
+              <div style="font-size:10.5px;color:#FF9C7A;margin-top:6px;">Sem meta, o ajuste de calorias fica genérico. Preenchendo os dois, o cálculo é bem mais preciso.</div>
+            ` : `
+              <div style="font-size:10.5px;color:var(--accent-energy);margin-top:6px;">
+                ${(() => {
+                  const diff = Number(state.aiForm.peso) - Number(state.aiForm.metaPeso);
+                  if (Math.abs(diff) < 1) return "Você já está na meta — foco em manutenção.";
+                  if (diff > 0) return `Faltam ${diff.toFixed(1)} kg pra meta — ajuste calculado pra emagrecimento.`;
+                  return `Faltam ${Math.abs(diff).toFixed(1)} kg pra meta — ajuste calculado pra ganho de massa.`;
+                })()}
+              </div>
+            `}
+          </div>
           <select id="ai-objetivo" data-model="aiForm.objetivo">${selectOptionsHTML(["Emagrecimento", "Manutenção", "Ganho de massa"], state.aiForm.objetivo)}</select>
           <div style="display:flex;gap:8px;">
-            <div style="flex:1;"><label style="font-size:10.5px;color:var(--text-faint);">Peso (kg)</label><input type="number" id="ai-peso" data-model="aiForm.peso" value="${state.aiForm.peso}" /></div>
             <div style="flex:1;"><label style="font-size:10.5px;color:var(--text-faint);">Altura (cm)</label><input type="number" id="ai-altura" data-model="aiForm.altura" value="${state.aiForm.altura}" /></div>
             <div style="flex:1;"><label style="font-size:10.5px;color:var(--text-faint);">Idade</label><input type="number" id="ai-idade" data-model="aiForm.idade" value="${state.aiForm.idade}" /></div>
           </div>

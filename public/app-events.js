@@ -41,6 +41,7 @@ function handleTabChange(e) {
   if (t.id === "goal-carb") updateConfig({ carbGoal: Number(t.value) || 0 }).then(render);
   if (t.id === "goal-fat") updateConfig({ fatGoal: Number(t.value) || 0 }).then(render);
   if (t.id === "goal-water") updateConfig({ waterGoal: Number(t.value) || 0 }).then(render);
+  if (t.id === "ai-peso" || t.id === "ai-meta-peso") render();
   if (t.id === "goal-weight") updateConfig({ weightGoal: Number(t.value) || 0 }).then(render);
 
   if (t.dataset.actionOnchange === "update-draft-grams") {
@@ -346,11 +347,27 @@ function syncAiFormFromProfile() {
   const current = state.config.currentWeight;
   const goal = state.config.weightGoal;
   if (current > 0) state.aiForm.peso = current;
+  if (goal > 0) state.aiForm.metaPeso = goal;
   if (current > 0 && goal > 0) {
     const diff = current - goal;
     if (diff > 1) state.aiForm.objetivo = "Emagrecimento";
     else if (diff < -1) state.aiForm.objetivo = "Ganho de massa";
     else state.aiForm.objetivo = "Manutenção";
+  }
+}
+
+async function syncProfileFromAiForm() {
+  const peso = Number(state.aiForm.peso) || 0;
+  const meta = Number(state.aiForm.metaPeso) || 0;
+  const patch = {};
+  if (peso > 0) patch.currentWeight = peso;
+  if (meta > 0) patch.weightGoal = meta;
+  if (Object.keys(patch).length > 0) await updateConfig(patch);
+  // Também registra o peso de hoje, pra aparecer certinho na aba Progresso
+  if (peso > 0) {
+    await saveKey(`weight:${dk()}`, { kg: peso });
+    const idx = state.weightHistory.findIndex((h) => h.date === dk());
+    if (idx >= 0) state.weightHistory[idx].kg = peso;
   }
 }
 
@@ -360,10 +377,10 @@ async function gerarDietaIA() {
   state.aiPlan = null;
   render();
   try {
+    await syncProfileFromAiForm();
     // Pequeno atraso só pra dar sensação de "processando" — o cálculo em si é instantâneo, local e gratuito.
     await new Promise((resolve) => setTimeout(resolve, 300));
-    const formWithGoal = { ...state.aiForm, metaPeso: state.config.weightGoal };
-    const parsed = generateAutoDiet(formWithGoal);
+    const parsed = generateAutoDiet(state.aiForm);
     if (!parsed.meals || parsed.meals.length === 0) throw new Error("Não foi possível montar o plano.");
     state.aiPlan = parsed;
   } catch (e) {
