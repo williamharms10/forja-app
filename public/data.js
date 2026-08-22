@@ -194,35 +194,6 @@ function getExerciseSubstitutes(name, muscle, limit) {
   return EXERCISE_DB.filter((e) => e.muscle === muscle && e.name !== name).slice(0, limit || 6);
 }
 
-// Busca um GIF de demonstração numa base pública gratuita (exercisedb.dev).
-// Só retorna o GIF se o nome do resultado realmente bater com o que buscamos —
-// nunca mostra um "quase igual" que possa ensinar o movimento errado.
-async function fetchExerciseGif(enQuery) {
-  try {
-    const res = await fetch(`https://oss.exercisedb.dev/api/v1/exercises?search=${encodeURIComponent(enQuery)}&limit=10`);
-    if (!res.ok) return null;
-    const data = await res.json();
-    if (!data || !Array.isArray(data.data) || data.data.length === 0) return null;
-
-    const queryWords = enQuery.toLowerCase().split(/\s+/).filter((w) => w.length > 2);
-    let best = null, bestScore = 0;
-    data.data.forEach((item) => {
-      const itemWords = (item.name || "").toLowerCase().split(/\s+/);
-      let score = 0;
-      queryWords.forEach((qw) => { if (itemWords.some((iw) => iw.includes(qw) || qw.includes(iw))) score++; });
-      if (score > bestScore) { bestScore = score; best = item; }
-    });
-
-    // Exige que pelo menos metade das palavras-chave batam, pra evitar "quase igual"
-    if (best && bestScore >= Math.max(1, Math.ceil(queryWords.length / 2))) {
-      return best.gifUrl;
-    }
-    return null;
-  } catch (e) {
-    return null;
-  }
-}
-
 const DEFAULT_PLANS = [
   {
     id: "planA", name: "Treino A — Peito e Tríceps", muscle: "Peito",

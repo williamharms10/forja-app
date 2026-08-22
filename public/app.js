@@ -35,9 +35,6 @@ const state = {
   showWaterGoalEdit: false,
   swapTarget: null,
   exerciseSwapTarget: null,
-  exerciseDemoTarget: null,
-  exerciseDemoGif: null,
-  exerciseDemoLoading: false,
   mealForm: { name: "" },
   customFood: { name: "", kcal: "", protein: "", carb: "", fat: "" },
   extraExerciseForm: { name: "", muscle: MUSCLES[0], sets: 3, reps: 10, weight: 0 },
@@ -521,18 +518,12 @@ function renderTreino() {
   state.workout.forEach((ex) => {
     const exSubs = getExerciseSubstitutes(ex.name, ex.muscle);
     const exPickerOpen = state.exerciseSwapTarget === ex.id;
-    const demoOpen = state.exerciseDemoTarget === ex.id;
     html += `
       <div class="card">
         <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;">
           <div>
             <div style="font-weight:700;font-size:15px;">${escapeHtml(ex.name)}</div>
-            <div style="display:flex;align-items:center;gap:8px;margin-top:2px;">
-              <span style="font-size:10.5px;font-weight:700;color:${MUSCLE_COLOR[ex.muscle]};text-transform:uppercase;letter-spacing:0.5px;">${ex.muscle}</span>
-              <button data-action="toggle-exercise-demo" data-ex="${ex.id}" style="background:none;border:none;padding:0;font-size:10.5px;color:var(--accent-water);display:flex;align-items:center;gap:3px;cursor:pointer;">
-                ${icon("play", 11)} demonstração
-              </button>
-            </div>
+            <span style="font-size:10.5px;font-weight:700;color:${MUSCLE_COLOR[ex.muscle]};text-transform:uppercase;letter-spacing:0.5px;">${ex.muscle}</span>
           </div>
           <div style="display:flex;gap:4px;">
             ${exSubs.length > 0 ? `
@@ -541,19 +532,6 @@ function renderTreino() {
             <button class="icon-btn" data-action="remove-exercise" data-ex="${ex.id}" style="color:#FF5C5C;">${icon("trash", 14)}</button>
           </div>
         </div>
-        ${demoOpen ? `
-          <div style="margin-bottom:10px;padding:8px;background:var(--surface-2);border-radius:8px;">
-            ${state.exerciseDemoLoading ? `
-              <div style="font-size:11px;color:var(--text-faint);">Buscando demonstração...</div>
-            ` : state.exerciseDemoGif ? `
-              <img src="${state.exerciseDemoGif}" alt="Demonstração de ${escapeHtml(ex.name)}" style="width:100%;border-radius:8px;display:block;background:#000;" />
-              <div style="font-size:9.5px;color:var(--text-faint);margin-top:5px;">Fonte: exercisedb.dev — confira se o movimento bate com "${escapeHtml(ex.name)}"</div>
-            ` : `
-              <div style="font-size:11px;color:var(--text-muted);margin-bottom:6px;">Não achei um GIF confiável pra esse exercício.</div>
-              <a href="https://www.youtube.com/results?search_query=${encodeURIComponent(ex.name + " exercício execução técnica")}" target="_blank" rel="noopener" style="font-size:11px;color:var(--accent-water);">Ver no YouTube →</a>
-            `}
-          </div>
-        ` : ""}
         ${exPickerOpen ? `
           <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;padding:8px;background:var(--surface-2);border-radius:8px;">
             <div style="width:100%;font-size:10px;color:var(--text-faint);margin-bottom:2px;">Substitutos (${ex.muscle}) — mantém as séries/reps que você já ajustou:</div>
