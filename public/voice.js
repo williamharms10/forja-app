@@ -92,6 +92,32 @@ function findBestFoodMatch(spokenText) {
   return bestScore > 0 ? best : null;
 }
 
+// Acha, dentro do treino de HOJE (não da base inteira), qual exercício a pessoa citou.
+// Ignora palavras de comando (fiz, terminei, com, quilos, repetições...) pra não
+// atrapalhar a comparação.
+const VOICE_STOPWORDS = new Set([
+  "fiz", "terminei", "completei", "conclui", "concluida", "concluido", "finalizei",
+  "marca", "marcar", "serie", "series", "com", "de", "do", "da", "no", "na",
+  "quilos", "quilo", "kg", "kilos", "repeticoes", "repeticao", "reps", "vezes", "e",
+]);
+
+function findBestWorkoutExerciseMatch(spokenText) {
+  const words = normalize(spokenText)
+    .replace(/\d+/g, " ")
+    .split(/\s+/)
+    .filter((w) => w.length > 2 && !VOICE_STOPWORDS.has(w));
+  if (words.length === 0 || !state.workout || state.workout.length === 0) return null;
+
+  let best = null, bestScore = 0;
+  state.workout.forEach((ex) => {
+    const nameWords = normalize(ex.name).split(/\s+/).filter((w) => !VOICE_STOPWORDS.has(w));
+    let score = 0;
+    words.forEach((w) => { if (nameWords.some((nw) => nw.includes(w) || w.includes(nw))) score++; });
+    if (score > bestScore) { bestScore = score; best = ex; }
+  });
+  return bestScore > 0 ? best : null;
+}
+
 function extractGrams(text) {
   const m = normalize(text).match(/(\d+)\s*(gramas?|g)\b/);
   return m ? Number(m[1]) : 100;
@@ -100,6 +126,42 @@ function extractGrams(text) {
 function extractNumber(text) {
   const m = text.replace(",", ".").match(/(\d+(\.\d+)?)/);
   return m ? Number(m[1]) : null;
+}
+
+function extractWeightKg(text) {
+  const m = normalize(text).replace(",", ".").match(/(\d+(?:\.\d+)?)\s*(quilos?|kg|kilos?)\b/);
+  return m ? Number(m[1]) : null;
+}
+
+function extractReps(text) {
+  const m = normalize(text).match(/(\d+)\s*(repeticoes|repeticao|reps|vezes)\b/);
+  return m ? Number(m[1]) : null;
+}
+
+async function markExerciseProgress(ex, weightKg, reps) {
+  const pendingIdx = ex.sets.findIndex((s) => !s.done);
+  if (pendingIdx === -1) {
+    speak(`Todas as séries de ${ex.name} já estão concluídas!`);
+    render();
+    return;
+  }
+  const next = state.workout.map((e) => e.id !== ex.id ? e : {
+    ...e,
+    sets: e.sets.map((s, i) => i !== pendingIdx ? s : {
+      ...s,
+      weight: weightKg != null ? weightKg : s.weight,
+      reps: reps != null ? reps : s.reps,
+      done: true,
+    }),
+  });
+  await updateWorkout(next);
+  startRestTimer(state.config.restSeconds || 60);
+  const detalhe = [
+    weightKg != null ? `${weightKg} quilos` : null,
+    reps != null ? `${reps} repetições` : null,
+  ].filter(Boolean).join(" e ");
+  speak(`Show! Marquei uma série de ${ex.name}${detalhe ? " com " + detalhe : ""}. Cronômetro de descanso ligado.`);
+  render();
 }
 
 async function handleVoiceCommand(rawText) {
@@ -128,6 +190,24 @@ async function handleVoiceCommand(rawText) {
     return;
   }
 
+  // --- Marcar exercício/série como feito (ex: "fiz supino com 60 quilos e 10 repetições") ---
+  if (/\b(fiz|terminei|completei|conclui|finalizei|marca(r)? série|marca(r)? serie)\b/.test(cmd)) {
+    const ex = findBestWorkoutExerciseMatch(cmd);
+    if (!ex) {
+      if (!state.workout || state.workout.length === 0) {
+        speak("Você ainda não escolheu o treino de hoje. Diga, por exemplo: Forja, iniciar treino A.");
+      } else {
+        speak(`Não achei esse exercício no treino de hoje. Você tem: ${state.workout.map((e) => e.name).join(", ")}.`);
+      }
+      render();
+      return;
+    }
+    const weightKg = extractWeightKg(cmd);
+    const reps = extractReps(cmd);
+    await markExerciseProgress(ex, weightKg, reps);
+    return;
+  }
+
   // --- Beber água ---
   if (/\b(bebi|tomei)\b/.test(cmd)) {
     let ml = 250;
@@ -150,9 +230,12 @@ async function handleVoiceCommand(rawText) {
     return;
   }
 
-  // --- Registrar peso ---
-  if (/\bpeso\b/.test(cmd)) {
-    const n = extractNumber(cmd);
+  // --- Registrar peso corporal ---
+  // Gatilho apertado de propósito: só dispara com frases claramente sobre o peso do
+  // corpo ("meu peso", "peso corporal", "registrar peso"), pra não confundir com o
+  // peso de carga de um exercício (ex: "fiz supino com 60 quilos" NÃO deve cair aqui).
+  if (/\bmeu peso\b/.test(cmd) || /\bpeso corporal\b/.test(cmd) || /\bregistrar peso\b/.test(cmd) || /^peso\b/.test(cmd)) {
+    const n = extractWeightKg(cmd) || extractNumber(cmd);
     if (!n) {
       speak("Não entendi o valor do peso. Tenta assim: Forja, meu peso é 80 quilos.");
       render();
@@ -213,7 +296,7 @@ async function handleVoiceCommand(rawText) {
     return;
   }
 
-  speak(`Não entendi esse comando. Você pode dizer, por exemplo: "Forja, comi arroz com frango", "Forja, bebi 300 mililitros de água", ou "Forja, resumo do dia".`);
+  speak(`Não entendi esse comando. Você pode dizer, por exemplo: "Forja, comi arroz com frango", "Forja, fiz supino com 60 quilos e 10 repetições", "Forja, bebi 300 mililitros de água", "Forja, meu peso é 80 quilos", ou "Forja, resumo do dia".`);
   render();
 }
 
