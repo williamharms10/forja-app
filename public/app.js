@@ -65,6 +65,7 @@ function dk() { return dateKey(state.selectedDate); }
 function isToday() { return dk() === dateKey(new Date()); }
 
 /* ---------------- BOOT ---------------- */
+initVoiceRecognition();
 auth.onAuthStateChanged(async (user) => {
   if (!user) {
     state.user = null;
@@ -260,10 +261,12 @@ function render() {
         ${tabBtnHTML("progresso", "chart", "Progresso", "var(--accent-energy)")}
       </div>
     </div>
+    ${voiceWidgetHTML()}
   `;
   document.getElementById("tab-content").innerHTML = renderTabContent();
   attachRootEvents();
   attachTabEvents();
+  attachVoiceEvents();
 }
 
 function tabBtnHTML(id, iconName, label, color) {
