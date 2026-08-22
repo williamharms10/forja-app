@@ -89,109 +89,138 @@ const FOOD_DB = [
 // Biblioteca de exercícios por grupo muscular (referência de treino de força comum em academias)
 const EXERCISE_DB = [
   // Peito
-  { name: "Supino reto", muscle: "Peito", local: "Academia" },
-  { name: "Supino inclinado", muscle: "Peito", local: "Academia" },
-  { name: "Supino declinado", muscle: "Peito", local: "Academia" },
-  { name: "Crucifixo reto", muscle: "Peito", local: "Academia" },
-  { name: "Crossover", muscle: "Peito", local: "Academia" },
-  { name: "Flexão de braço", muscle: "Peito", local: "Ambos" },
-  { name: "Flexão diamante", muscle: "Peito", local: "Ambos" },
-  { name: "Flexão inclinada", muscle: "Peito", local: "Ambos" },
-  { name: "Flexão declinada (pés elevados)", muscle: "Peito", local: "Ambos" },
-  { name: "Peck deck (voador)", muscle: "Peito", local: "Academia" },
+  { name: "Supino reto", muscle: "Peito", local: "Academia", enQuery: "barbell bench press" },
+  { name: "Supino inclinado", muscle: "Peito", local: "Academia", enQuery: "incline bench press" },
+  { name: "Supino declinado", muscle: "Peito", local: "Academia", enQuery: "decline bench press" },
+  { name: "Crucifixo reto", muscle: "Peito", local: "Academia", enQuery: "dumbbell fly" },
+  { name: "Crossover", muscle: "Peito", local: "Academia", enQuery: "cable crossover" },
+  { name: "Flexão de braço", muscle: "Peito", local: "Ambos", enQuery: "push up" },
+  { name: "Flexão diamante", muscle: "Peito", local: "Ambos", enQuery: "diamond push up" },
+  { name: "Flexão inclinada", muscle: "Peito", local: "Ambos", enQuery: "incline push up" },
+  { name: "Flexão declinada (pés elevados)", muscle: "Peito", local: "Ambos", enQuery: "decline push up" },
+  { name: "Peck deck (voador)", muscle: "Peito", local: "Academia", enQuery: "pec deck fly" },
   // Costas
-  { name: "Puxada frontal (pulley)", muscle: "Costas", local: "Academia" },
-  { name: "Remada curvada", muscle: "Costas", local: "Academia" },
-  { name: "Remada baixa (cabo)", muscle: "Costas", local: "Academia" },
-  { name: "Remada unilateral (serrote)", muscle: "Costas", local: "Academia" },
-  { name: "Barra fixa", muscle: "Costas", local: "Ambos" },
-  { name: "Levantamento terra", muscle: "Costas", local: "Academia" },
-  { name: "Pulldown", muscle: "Costas", local: "Academia" },
-  { name: "Hiperextensão lombar", muscle: "Costas", local: "Academia" },
-  { name: "Superman (extensão lombar no chão)", muscle: "Costas", local: "Ambos" },
+  { name: "Puxada frontal (pulley)", muscle: "Costas", local: "Academia", enQuery: "lat pulldown" },
+  { name: "Remada curvada", muscle: "Costas", local: "Academia", enQuery: "bent over row" },
+  { name: "Remada baixa (cabo)", muscle: "Costas", local: "Academia", enQuery: "seated cable row" },
+  { name: "Remada unilateral (serrote)", muscle: "Costas", local: "Academia", enQuery: "one arm dumbbell row" },
+  { name: "Barra fixa", muscle: "Costas", local: "Ambos", enQuery: "pull up" },
+  { name: "Levantamento terra", muscle: "Costas", local: "Academia", enQuery: "deadlift" },
+  { name: "Pulldown", muscle: "Costas", local: "Academia", enQuery: "pulldown" },
+  { name: "Hiperextensão lombar", muscle: "Costas", local: "Academia", enQuery: "back extension" },
+  { name: "Superman (extensão lombar no chão)", muscle: "Costas", local: "Ambos", enQuery: "superman exercise" },
   // Perna
-  { name: "Agachamento livre", muscle: "Perna", local: "Ambos" },
-  { name: "Agachamento no smith", muscle: "Perna", local: "Academia" },
-  { name: "Agachamento sumô", muscle: "Perna", local: "Ambos" },
-  { name: "Leg press 45°", muscle: "Perna", local: "Academia" },
-  { name: "Cadeira extensora", muscle: "Perna", local: "Academia" },
-  { name: "Mesa flexora", muscle: "Perna", local: "Academia" },
-  { name: "Cadeira flexora", muscle: "Perna", local: "Academia" },
-  { name: "Afundo (passada)", muscle: "Perna", local: "Ambos" },
-  { name: "Afundo búlgaro", muscle: "Perna", local: "Ambos" },
-  { name: "Stiff", muscle: "Perna", local: "Ambos" },
-  { name: "Panturrilha em pé", muscle: "Perna", local: "Ambos" },
-  { name: "Panturrilha sentado", muscle: "Perna", local: "Academia" },
-  { name: "Panturrilha unilateral", muscle: "Perna", local: "Ambos" },
-  { name: "Cadeira adutora", muscle: "Perna", local: "Academia" },
-  { name: "Cadeira abdutora", muscle: "Perna", local: "Academia" },
-  { name: "Elevação de quadril (ponte de glúteo)", muscle: "Perna", local: "Ambos" },
-  { name: "Cadeira na parede (wall sit)", muscle: "Perna", local: "Ambos" },
+  { name: "Agachamento livre", muscle: "Perna", local: "Ambos", enQuery: "barbell full squat" },
+  { name: "Agachamento no smith", muscle: "Perna", local: "Academia", enQuery: "smith machine squat" },
+  { name: "Agachamento sumô", muscle: "Perna", local: "Ambos", enQuery: "sumo squat" },
+  { name: "Leg press 45°", muscle: "Perna", local: "Academia", enQuery: "leg press" },
+  { name: "Cadeira extensora", muscle: "Perna", local: "Academia", enQuery: "leg extension" },
+  { name: "Mesa flexora", muscle: "Perna", local: "Academia", enQuery: "lying leg curl" },
+  { name: "Cadeira flexora", muscle: "Perna", local: "Academia", enQuery: "seated leg curl" },
+  { name: "Afundo (passada)", muscle: "Perna", local: "Ambos", enQuery: "lunge" },
+  { name: "Afundo búlgaro", muscle: "Perna", local: "Ambos", enQuery: "bulgarian split squat" },
+  { name: "Stiff", muscle: "Perna", local: "Ambos", enQuery: "stiff leg deadlift" },
+  { name: "Panturrilha em pé", muscle: "Perna", local: "Ambos", enQuery: "standing calf raise" },
+  { name: "Panturrilha sentado", muscle: "Perna", local: "Academia", enQuery: "seated calf raise" },
+  { name: "Panturrilha unilateral", muscle: "Perna", local: "Ambos", enQuery: "single leg calf raise" },
+  { name: "Cadeira adutora", muscle: "Perna", local: "Academia", enQuery: "hip adduction machine" },
+  { name: "Cadeira abdutora", muscle: "Perna", local: "Academia", enQuery: "hip abduction machine" },
+  { name: "Elevação de quadril (ponte de glúteo)", muscle: "Perna", local: "Ambos", enQuery: "glute bridge" },
+  { name: "Cadeira na parede (wall sit)", muscle: "Perna", local: "Ambos", enQuery: "wall sit" },
   // Ombro
-  { name: "Desenvolvimento militar", muscle: "Ombro", local: "Academia" },
-  { name: "Desenvolvimento Arnold", muscle: "Ombro", local: "Academia" },
-  { name: "Elevação lateral", muscle: "Ombro", local: "Ambos" },
-  { name: "Elevação frontal", muscle: "Ombro", local: "Ambos" },
-  { name: "Remada alta", muscle: "Ombro", local: "Academia" },
-  { name: "Face pull", muscle: "Ombro", local: "Academia" },
-  { name: "Encolhimento de trapézio", muscle: "Ombro", local: "Academia" },
+  { name: "Desenvolvimento militar", muscle: "Ombro", local: "Academia", enQuery: "military press" },
+  { name: "Desenvolvimento Arnold", muscle: "Ombro", local: "Academia", enQuery: "arnold press" },
+  { name: "Elevação lateral", muscle: "Ombro", local: "Ambos", enQuery: "lateral raise" },
+  { name: "Elevação frontal", muscle: "Ombro", local: "Ambos", enQuery: "front raise" },
+  { name: "Remada alta", muscle: "Ombro", local: "Academia", enQuery: "upright row" },
+  { name: "Face pull", muscle: "Ombro", local: "Academia", enQuery: "face pull" },
+  { name: "Encolhimento de trapézio", muscle: "Ombro", local: "Academia", enQuery: "shrug" },
   // Braço
-  { name: "Rosca direta (barra)", muscle: "Braço", local: "Academia" },
-  { name: "Rosca alternada (halteres)", muscle: "Braço", local: "Academia" },
-  { name: "Rosca martelo", muscle: "Braço", local: "Academia" },
-  { name: "Rosca scott", muscle: "Braço", local: "Academia" },
-  { name: "Tríceps testa", muscle: "Braço", local: "Academia" },
-  { name: "Tríceps corda (pulley)", muscle: "Braço", local: "Academia" },
-  { name: "Tríceps francês", muscle: "Braço", local: "Academia" },
-  { name: "Mergulho no banco (dips)", muscle: "Braço", local: "Ambos" },
-  { name: "Dips entre duas cadeiras", muscle: "Braço", local: "Casa" },
+  { name: "Rosca direta (barra)", muscle: "Braço", local: "Academia", enQuery: "barbell curl" },
+  { name: "Rosca alternada (halteres)", muscle: "Braço", local: "Academia", enQuery: "alternate dumbbell curl" },
+  { name: "Rosca martelo", muscle: "Braço", local: "Academia", enQuery: "hammer curl" },
+  { name: "Rosca scott", muscle: "Braço", local: "Academia", enQuery: "preacher curl" },
+  { name: "Tríceps testa", muscle: "Braço", local: "Academia", enQuery: "lying triceps extension" },
+  { name: "Tríceps corda (pulley)", muscle: "Braço", local: "Academia", enQuery: "triceps pushdown" },
+  { name: "Tríceps francês", muscle: "Braço", local: "Academia", enQuery: "overhead triceps extension" },
+  { name: "Mergulho no banco (dips)", muscle: "Braço", local: "Ambos", enQuery: "bench dip" },
+  { name: "Dips entre duas cadeiras", muscle: "Braço", local: "Casa", enQuery: "chair dip" },
   // Core
-  { name: "Abdominal supra", muscle: "Core", local: "Ambos" },
-  { name: "Abdominal infra", muscle: "Core", local: "Ambos" },
-  { name: "Prancha", muscle: "Core", local: "Ambos" },
-  { name: "Prancha lateral", muscle: "Core", local: "Ambos" },
-  { name: "Elevação de pernas", muscle: "Core", local: "Ambos" },
-  { name: "Russian twist", muscle: "Core", local: "Ambos" },
-  { name: "Mountain climber", muscle: "Core", local: "Ambos" },
-  { name: "Bicicleta abdominal", muscle: "Core", local: "Ambos" },
+  { name: "Abdominal supra", muscle: "Core", local: "Ambos", enQuery: "crunch" },
+  { name: "Abdominal infra", muscle: "Core", local: "Ambos", enQuery: "reverse crunch" },
+  { name: "Prancha", muscle: "Core", local: "Ambos", enQuery: "plank" },
+  { name: "Prancha lateral", muscle: "Core", local: "Ambos", enQuery: "side plank" },
+  { name: "Elevação de pernas", muscle: "Core", local: "Ambos", enQuery: "hanging leg raise" },
+  { name: "Russian twist", muscle: "Core", local: "Ambos", enQuery: "russian twist" },
+  { name: "Mountain climber", muscle: "Core", local: "Ambos", enQuery: "mountain climber" },
+  { name: "Bicicleta abdominal", muscle: "Core", local: "Ambos", enQuery: "bicycle crunch" },
   // Cardio
-  { name: "Esteira (corrida/caminhada)", muscle: "Cardio", local: "Academia" },
-  { name: "Bicicleta ergométrica", muscle: "Cardio", local: "Academia" },
-  { name: "Elíptico", muscle: "Cardio", local: "Academia" },
-  { name: "Pular corda", muscle: "Cardio", local: "Ambos" },
-  { name: "HIIT", muscle: "Cardio", local: "Ambos" },
-  { name: "Remo (ergômetro)", muscle: "Cardio", local: "Academia" },
-  { name: "Corrida com elevação de joelhos (high knees)", muscle: "Cardio", local: "Ambos" },
+  { name: "Esteira (corrida/caminhada)", muscle: "Cardio", local: "Academia", enQuery: "treadmill running" },
+  { name: "Bicicleta ergométrica", muscle: "Cardio", local: "Academia", enQuery: "stationary bike" },
+  { name: "Elíptico", muscle: "Cardio", local: "Academia", enQuery: "elliptical trainer" },
+  { name: "Pular corda", muscle: "Cardio", local: "Ambos", enQuery: "jump rope" },
+  { name: "HIIT", muscle: "Cardio", local: "Ambos", enQuery: "high intensity interval training" },
+  { name: "Remo (ergômetro)", muscle: "Cardio", local: "Academia", enQuery: "rowing machine" },
+  { name: "Corrida com elevação de joelhos (high knees)", muscle: "Cardio", local: "Ambos", enQuery: "high knees" },
   // Pliometria (movimentos explosivos)
-  { name: "Agachamento com salto (jump squat)", muscle: "Pliometria", local: "Ambos" },
-  { name: "Salto na caixa (box jump)", muscle: "Pliometria", local: "Academia" },
-  { name: "Burpee", muscle: "Pliometria", local: "Ambos" },
-  { name: "Avanço com salto (jump lunge)", muscle: "Pliometria", local: "Ambos" },
-  { name: "Polichinelo", muscle: "Pliometria", local: "Ambos" },
-  { name: "Flexão com palmas (clap push-up)", muscle: "Pliometria", local: "Ambos" },
-  { name: "Salto lateral (skater jump)", muscle: "Pliometria", local: "Ambos" },
-  { name: "Salto em distância (broad jump)", muscle: "Pliometria", local: "Ambos" },
-  { name: "Tuck jump (joelhos ao peito)", muscle: "Pliometria", local: "Ambos" },
-  { name: "Corrida estacionária explosiva", muscle: "Pliometria", local: "Ambos" },
+  { name: "Agachamento com salto (jump squat)", muscle: "Pliometria", local: "Ambos", enQuery: "jump squat" },
+  { name: "Salto na caixa (box jump)", muscle: "Pliometria", local: "Academia", enQuery: "box jump" },
+  { name: "Burpee", muscle: "Pliometria", local: "Ambos", enQuery: "burpee" },
+  { name: "Avanço com salto (jump lunge)", muscle: "Pliometria", local: "Ambos", enQuery: "jumping lunge" },
+  { name: "Polichinelo", muscle: "Pliometria", local: "Ambos", enQuery: "jumping jack" },
+  { name: "Flexão com palmas (clap push-up)", muscle: "Pliometria", local: "Ambos", enQuery: "clap push up" },
+  { name: "Salto lateral (skater jump)", muscle: "Pliometria", local: "Ambos", enQuery: "skater jump" },
+  { name: "Salto em distância (broad jump)", muscle: "Pliometria", local: "Ambos", enQuery: "broad jump" },
+  { name: "Tuck jump (joelhos ao peito)", muscle: "Pliometria", local: "Ambos", enQuery: "tuck jump" },
+  { name: "Corrida estacionária explosiva", muscle: "Pliometria", local: "Ambos", enQuery: "high knees running in place" },
   // Alongamento
-  { name: "Alongamento de isquiotibiais", muscle: "Alongamento", local: "Ambos" },
-  { name: "Alongamento de quadríceps", muscle: "Alongamento", local: "Ambos" },
-  { name: "Alongamento de panturrilha", muscle: "Alongamento", local: "Ambos" },
-  { name: "Alongamento de peitoral", muscle: "Alongamento", local: "Ambos" },
-  { name: "Alongamento de ombros (cruzado)", muscle: "Alongamento", local: "Ambos" },
-  { name: "Alongamento de tríceps", muscle: "Alongamento", local: "Ambos" },
-  { name: "Alongamento de pescoço", muscle: "Alongamento", local: "Ambos" },
-  { name: "Alongamento lombar (joelhos ao peito)", muscle: "Alongamento", local: "Ambos" },
-  { name: "Gato-vaca (mobilidade de coluna)", muscle: "Alongamento", local: "Ambos" },
-  { name: "Alongamento de adutores", muscle: "Alongamento", local: "Ambos" },
-  { name: "Alongamento de flexores do quadril", muscle: "Alongamento", local: "Ambos" },
-  { name: "Torção de tronco sentado", muscle: "Alongamento", local: "Ambos" },
+  { name: "Alongamento de isquiotibiais", muscle: "Alongamento", local: "Ambos", enQuery: "hamstring stretch" },
+  { name: "Alongamento de quadríceps", muscle: "Alongamento", local: "Ambos", enQuery: "quad stretch" },
+  { name: "Alongamento de panturrilha", muscle: "Alongamento", local: "Ambos", enQuery: "calf stretch" },
+  { name: "Alongamento de peitoral", muscle: "Alongamento", local: "Ambos", enQuery: "chest stretch" },
+  { name: "Alongamento de ombros (cruzado)", muscle: "Alongamento", local: "Ambos", enQuery: "shoulder stretch" },
+  { name: "Alongamento de tríceps", muscle: "Alongamento", local: "Ambos", enQuery: "triceps stretch" },
+  { name: "Alongamento de pescoço", muscle: "Alongamento", local: "Ambos", enQuery: "neck stretch" },
+  { name: "Alongamento lombar (joelhos ao peito)", muscle: "Alongamento", local: "Ambos", enQuery: "lower back stretch" },
+  { name: "Gato-vaca (mobilidade de coluna)", muscle: "Alongamento", local: "Ambos", enQuery: "cat cow stretch" },
+  { name: "Alongamento de adutores", muscle: "Alongamento", local: "Ambos", enQuery: "groin stretch" },
+  { name: "Alongamento de flexores do quadril", muscle: "Alongamento", local: "Ambos", enQuery: "hip flexor stretch" },
+  { name: "Torção de tronco sentado", muscle: "Alongamento", local: "Ambos", enQuery: "seated trunk rotation" },
 ];
 
 // Busca exercícios equivalentes (mesmo grupo muscular), útil quando a academia
 // não tem o aparelho ou você quer uma opção diferente pra treinar em casa.
 function getExerciseSubstitutes(name, muscle, limit) {
   return EXERCISE_DB.filter((e) => e.muscle === muscle && e.name !== name).slice(0, limit || 6);
+}
+
+// Busca um GIF de demonstração numa base pública gratuita (exercisedb.dev).
+// Só retorna o GIF se o nome do resultado realmente bater com o que buscamos —
+// nunca mostra um "quase igual" que possa ensinar o movimento errado.
+async function fetchExerciseGif(enQuery) {
+  try {
+    const res = await fetch(`https://oss.exercisedb.dev/api/v1/exercises?search=${encodeURIComponent(enQuery)}&limit=10`);
+    if (!res.ok) return null;
+    const data = await res.json();
+    if (!data || !Array.isArray(data.data) || data.data.length === 0) return null;
+
+    const queryWords = enQuery.toLowerCase().split(/\s+/).filter((w) => w.length > 2);
+    let best = null, bestScore = 0;
+    data.data.forEach((item) => {
+      const itemWords = (item.name || "").toLowerCase().split(/\s+/);
+      let score = 0;
+      queryWords.forEach((qw) => { if (itemWords.some((iw) => iw.includes(qw) || qw.includes(iw))) score++; });
+      if (score > bestScore) { bestScore = score; best = item; }
+    });
+
+    // Exige que pelo menos metade das palavras-chave batam, pra evitar "quase igual"
+    if (best && bestScore >= Math.max(1, Math.ceil(queryWords.length / 2))) {
+      return best.gifUrl;
+    }
+    return null;
+  } catch (e) {
+    return null;
+  }
 }
 
 const DEFAULT_PLANS = [

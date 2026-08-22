@@ -98,6 +98,7 @@ function handleTabClick(e) {
       render();
       break;
     case "swap-exercise-item": swapExerciseItem(btn.dataset.ex, btn.dataset.newname); break;
+    case "toggle-exercise-demo": toggleExerciseDemo(btn.dataset.ex); break;
     case "toggle-set": toggleSet(btn.dataset.ex, Number(btn.dataset.idx)); break;
     case "skip-rest-timer": stopRestTimer(); break;
     case "add-set": addSet(btn.dataset.ex); break;
@@ -284,6 +285,40 @@ function swapExerciseItem(exId, newName) {
     state.exerciseSwapTarget = null;
     render();
   });
+}
+
+const exerciseGifCache = {};
+
+async function toggleExerciseDemo(exId) {
+  if (state.exerciseDemoTarget === exId) {
+    state.exerciseDemoTarget = null;
+    render();
+    return;
+  }
+  state.exerciseDemoTarget = exId;
+  state.exerciseDemoGif = null;
+  state.exerciseDemoLoading = true;
+  render();
+
+  const ex = state.workout.find((e) => e.id === exId);
+  const dbEntry = ex ? EXERCISE_DB.find((e) => e.name === ex.name) : null;
+  let gif = null;
+
+  if (dbEntry && dbEntry.enQuery) {
+    if (Object.prototype.hasOwnProperty.call(exerciseGifCache, dbEntry.enQuery)) {
+      gif = exerciseGifCache[dbEntry.enQuery];
+    } else {
+      gif = await fetchExerciseGif(dbEntry.enQuery);
+      exerciseGifCache[dbEntry.enQuery] = gif;
+    }
+  }
+
+  // Se o usuário já fechou ou trocou de exercício enquanto buscava, não sobrescreve
+  if (state.exerciseDemoTarget === exId) {
+    state.exerciseDemoGif = gif;
+    state.exerciseDemoLoading = false;
+    render();
+  }
 }
 
 function toggleSet(exId, idx) {
