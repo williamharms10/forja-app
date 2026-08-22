@@ -129,7 +129,7 @@ async function handleVoiceCommand(rawText) {
   }
 
   // --- Beber água ---
-  if (/\b(bebi|tomei|beber)\b.*\bagua\b|^\bagua\b/.test(cmd)) {
+  if (/\b(bebi|tomei)\b/.test(cmd)) {
     let ml = 250;
     if (/\d+\s*(ml|mililitros?)\b/.test(cmd)) {
       const n = extractNumber(cmd);
@@ -159,22 +159,42 @@ async function handleVoiceCommand(rawText) {
       return;
     }
     await saveKey(`weight:${dk()}`, { kg: n });
-    await updateConfig({ currentWeight: n });
+    await updateConfig({ currentWeight: n, waterGoal: calcWaterGoal(n) });
     if (state.progressLoaded) {
       const idx = state.weightHistory.findIndex((h) => h.date === dk());
       if (idx >= 0) state.weightHistory[idx].kg = n;
     }
-    speak(`Peso registrado: ${n} quilos.`);
+    speak(`Peso registrado: ${n} quilos. Sua meta de água também foi ajustada pra ${calcWaterGoal(n)} mililitros.`);
     render();
     return;
   }
 
   // --- Iniciar treino ---
   if (/\b(treino|come[cç]ar treino|iniciar treino)\b/.test(cmd)) {
-    const match = state.plans.find((p) => normalize(p.name).includes(cmd.replace(/treino/g, "").trim())) ||
-      state.plans.find((p) => cmd.includes(normalize(p.name).split(" ")[1] || "___"));
+    const cleaned = cmd
+      .replace(/\btreino\b/g, "")
+      .replace(/\b(iniciar|come[cç]ar)\b/g, "")
+      .trim();
+
+    let match = null;
+
+    // 1) Tenta bater pela letra do treino ("A", "B", "C"...) dita isoladamente
+    const letterMatch = cleaned.match(/\b([a-g])\b/);
+    if (letterMatch) {
+      const letter = letterMatch[1];
+      match = state.plans.find((p) => normalize(p.name).includes(`treino ${letter}`));
+    }
+
+    // 2) Senão, tenta bater por palavra-chave do nome (ex: "perna", "casa", "peito")
+    if (!match && cleaned) {
+      match = state.plans.find((p) => {
+        const planWords = normalize(p.name).split(/[^a-z0-9]+/).filter((w) => w.length > 2);
+        return planWords.some((pw) => cleaned.includes(pw));
+      });
+    }
+
     if (!match) {
-      speak(`Não achei esse treino. Você tem: ${state.plans.map((p) => p.name).join(", ")}.`);
+      speak(`Não entendi qual treino. Você tem: ${state.plans.map((p) => p.name).join(", ")}.`);
       render();
       return;
     }

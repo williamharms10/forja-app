@@ -497,7 +497,7 @@ async function syncProfileFromAiForm() {
   const peso = Number(state.aiForm.peso) || 0;
   const meta = Number(state.aiForm.metaPeso) || 0;
   const patch = {};
-  if (peso > 0) patch.currentWeight = peso;
+  if (peso > 0) { patch.currentWeight = peso; patch.waterGoal = calcWaterGoal(peso); }
   if (meta > 0) patch.weightGoal = meta;
   if (Object.keys(patch).length > 0) await updateConfig(patch);
   // Também registra o peso de hoje, pra aparecer certinho na aba Progresso
@@ -580,9 +580,10 @@ function saveWeight() {
     const idx = state.weightHistory.findIndex((h) => h.date === dk());
     if (idx >= 0) state.weightHistory[idx].kg = kg;
     // Se for o peso de hoje (ou mais recente que o já guardado), atualiza o perfil
-    // pra esse valor ficar dispon\u00edvel em outras telas (como a gera\u00e7\u00e3o de dieta).
+    // pra esse valor ficar disponível em outras telas (como a geração de dieta),
+    // e recalcula a meta de água automaticamente (35ml por kg).
     if (dk() === dateKey(new Date())) {
-      await updateConfig({ currentWeight: kg });
+      await updateConfig({ currentWeight: kg, waterGoal: calcWaterGoal(kg) });
     }
     render();
   });
