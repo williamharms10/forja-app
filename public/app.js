@@ -17,6 +17,9 @@ const state = {
   showWorkoutGenForm: false,
   workoutGenForm: { objetivo: "Manutenção", local: "Ambos", dias: 3 },
   workoutGenResult: null,
+  workoutRotation: null,
+  rotationExpired: false,
+  rotationInfo: null,
   showExtraExerciseForm: false,
   showMealForm: false,
   showCustomFood: false,
@@ -30,6 +33,7 @@ const state = {
   showGoalsEdit: false,
   showWaterGoalEdit: false,
   swapTarget: null,
+  exerciseSwapTarget: null,
   mealForm: { name: "" },
   customFood: { name: "", kcal: "", protein: "", carb: "", fat: "" },
   extraExerciseForm: { name: "", muscle: MUSCLES[0], sets: 3, reps: 10, weight: 0 },
@@ -86,23 +90,90 @@ auth.onAuthStateChanged(async (user) => {
     state.plans = DEFAULT_PLANS;
     await saveKey("plans", DEFAULT_PLANS);
   }
+  state.workoutRotation = await loadKey("workoutRotation", null);
   await loadDayData();
   await computeStreak();
   render();
 });
 
+function daysBetween(dateStrA, dateStrB) {
+  const a = new Date(dateStrA + "T00:00:00Z");
+  const b = new Date(dateStrB + "T00:00:00Z");
+  return Math.round((b - a) / 86400000);
+}
+
+const MAX_ROTATION_CYCLES = 10;
+
+function computeRotationPlanForDate(dateStr) {
+  const rot = state.workoutRotation;
+  if (!rot || !rot.active || !rot.planIds || rot.planIds.length === 0) return null;
+  const diff = daysBetween(rot.startDate, dateStr);
+  if (diff < 0) return null;
+  const len = rot.planIds.length;
+  const cycleNumber = Math.floor(diff / len) + 1;
+  if (cycleNumber > MAX_ROTATION_CYCLES) return { expired: true, cycleNumber };
+  const idx = diff % len;
+  const plan = state.plans.find((p) => p.id === rot.planIds[idx]);
+  if (!plan) return null;
+  return { plan, cycleNumber, dayInCycle: idx + 1, totalDays: len };
+}
+
 async function loadDayData() {
   const key = dk();
-  const [w, m, ag, dp] = await Promise.all([
-    loadKey(`workout:${key}`, []),
-    loadKey(`diet:${key}`, []),
-    loadKey(`water:${key}`, { ml: 0 }),
-    loadKey(`dayplan:${key}`, null),
-  ]);
-  state.workout = w;
-  state.meals = m;
+  const ag = await loadKey(`water:${key}`, { ml: 0 });
   state.water = ag.ml || 0;
-  state.dayPlanName = dp ? dp.name : null;
+
+  const dp = await loadKey(`dayplan:${key}`, null);
+  state.rotationExpired = false;
+  state.rotationInfo = null;
+
+  if (dp) {
+    state.dayPlanName = dp.name;
+    state.workout = await loadKey(`workout:${key}`, []);
+  } else if (state.workoutRotation && state.workoutRotation.active) {
+    const rotResult = computeRotationPlanForDate(key);
+    if (rotResult && rotResult.expired) {
+      state.dayPlanName = null;
+      state.workout = [];
+      state.rotationExpired = true;
+    } else if (rotResult && rotResult.plan) {
+      const numSets = rotResult.plan.genSets || 3;
+      const numReps = rotResult.plan.genReps || 10;
+      const seededWorkout = rotResult.plan.exercises.map((ex) => ({
+        id: uid(), name: ex.name, muscle: ex.muscle,
+        sets: Array.from({ length: numSets }, () => ({ reps: numReps, weight: 0, done: false })),
+      }));
+      state.workout = seededWorkout;
+      state.dayPlanName = rotResult.plan.name;
+      state.rotationInfo = rotResult;
+      await saveKey(`workout:${key}`, seededWorkout);
+      await saveKey(`dayplan:${key}`, { name: rotResult.plan.name });
+    } else {
+      state.dayPlanName = null;
+      state.workout = [];
+    }
+  } else {
+    state.dayPlanName = null;
+    state.workout = await loadKey(`workout:${key}`, []);
+  }
+
+  // Dieta: se esse dia específico ainda não tem refeições salvas, semeia a partir
+  // da dieta fixa (o template gerado em "Gerar dieta automaticamente"), se existir.
+  const dietRaw = await storageGet(`diet:${key}`);
+  if (dietRaw !== null) {
+    state.meals = JSON.parse(dietRaw);
+  } else {
+    const fixedDiet = await loadKey("fixedDiet", null);
+    if (fixedDiet && fixedDiet.meals && fixedDiet.meals.length > 0) {
+      const seeded = fixedDiet.meals.map((m) => ({
+        ...m, id: uid(), items: (m.items || []).map((it) => ({ ...it })),
+      }));
+      state.meals = seeded;
+      await saveKey(`diet:${key}`, seeded);
+    } else {
+      state.meals = [];
+    }
+  }
 }
 
 async function computeStreak() {
@@ -377,16 +448,31 @@ function renderTreino() {
   }
 
   html += `
-    <div style="display:flex;gap:14px;">
+    <div style="display:flex;gap:14px;flex-wrap:wrap;">
       <button data-action="show-manager" style="background:none;border:none;color:var(--text-faint);font-size:11.5px;display:flex;align-items:center;gap:4px;">
         ${icon("pencil", 12)} Gerenciar treinos
       </button>
       <button data-action="toggle-workout-gen-form" style="background:none;border:none;color:var(--accent-energy);font-size:11.5px;display:flex;align-items:center;gap:4px;font-weight:700;">
         ${icon("dumbbell", 12)} Gerar treino automaticamente
       </button>
+      <button data-action="toggle-workout-rotation" style="background:none;border:none;color:${state.workoutRotation && state.workoutRotation.active ? "var(--accent-energy)" : "var(--text-faint)"};font-size:11.5px;display:flex;align-items:center;gap:4px;font-weight:700;">
+        ${icon("scale", 12)} ${state.workoutRotation && state.workoutRotation.active ? "Desativar rotina fixa" : "Ativar rotina fixa"}
+      </button>
     </div>`;
 
   if (state.showWorkoutGenForm) html += renderWorkoutGenerator();
+
+  if (state.rotationExpired) {
+    html += `
+      <div class="card" style="border-color:#FF9C7A;">
+        <div style="font-weight:700;font-size:13.5px;">Você completou os 10 ciclos da sua rotina! 🎉</div>
+        <div style="font-size:11.5px;color:var(--text-muted);margin-top:4px;">Hora de renovar — gera um treino novo ou reinicia essa mesma rotina do zero.</div>
+        <div style="display:flex;gap:8px;margin-top:10px;">
+          <button data-action="restart-workout-rotation" class="btn-primary" style="flex:1;background:var(--accent-energy);">Reiniciar essa rotina</button>
+          <button data-action="toggle-workout-gen-form" class="btn-secondary">Gerar nova</button>
+        </div>
+      </div>`;
+  }
 
   if (state.dayPlanName) {
     html += `
@@ -394,6 +480,7 @@ function renderTreino() {
         <div>
           <div style="font-size:10.5px;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.5px;">Treino de hoje</div>
           <div style="font-weight:700;font-size:14px;">${escapeHtml(state.dayPlanName)}</div>
+          ${state.rotationInfo ? `<div style="font-size:10.5px;color:var(--accent-energy);margin-top:2px;">Rotina fixa · Ciclo ${state.rotationInfo.cycleNumber} de ${MAX_ROTATION_CYCLES} · Dia ${state.rotationInfo.dayInCycle}/${state.rotationInfo.totalDays}</div>` : ""}
         </div>
         <button data-action="trocar-treino" class="btn-secondary" style="padding:7px 12px;font-size:11.5px;">Trocar</button>
       </div>`;
@@ -411,6 +498,8 @@ function renderTreino() {
   }
 
   state.workout.forEach((ex) => {
+    const exSubs = getExerciseSubstitutes(ex.name, ex.muscle);
+    const exPickerOpen = state.exerciseSwapTarget === ex.id;
     html += `
       <div class="card">
         <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;">
@@ -418,8 +507,23 @@ function renderTreino() {
             <div style="font-weight:700;font-size:15px;">${escapeHtml(ex.name)}</div>
             <span style="font-size:10.5px;font-weight:700;color:${MUSCLE_COLOR[ex.muscle]};text-transform:uppercase;letter-spacing:0.5px;">${ex.muscle}</span>
           </div>
-          <button class="icon-btn" data-action="remove-exercise" data-ex="${ex.id}" style="color:#FF5C5C;">${icon("trash", 14)}</button>
+          <div style="display:flex;gap:4px;">
+            ${exSubs.length > 0 ? `
+              <button class="icon-btn" data-action="toggle-exercise-swap-picker" data-ex="${ex.id}" title="Trocar exercício" style="color:${exPickerOpen ? "var(--accent-energy)" : "var(--text-muted)"};">${icon("swap", 14)}</button>
+            ` : ""}
+            <button class="icon-btn" data-action="remove-exercise" data-ex="${ex.id}" style="color:#FF5C5C;">${icon("trash", 14)}</button>
+          </div>
         </div>
+        ${exPickerOpen ? `
+          <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;padding:8px;background:var(--surface-2);border-radius:8px;">
+            <div style="width:100%;font-size:10px;color:var(--text-faint);margin-bottom:2px;">Substitutos (${ex.muscle}) — mantém as séries/reps que você já ajustou:</div>
+            ${exSubs.map((s) => `
+              <button data-action="swap-exercise-item" data-ex="${ex.id}" data-newname="${escapeHtml(s.name)}" data-newlocal="${s.local || ""}" style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:5px 9px;font-size:10.5px;color:var(--text);">
+                ${escapeHtml(s.name)} ${s.local ? `<span style="color:var(--text-faint);">· ${s.local}</span>` : ""}
+              </button>
+            `).join("")}
+          </div>
+        ` : ""}
         <div style="display:flex;flex-direction:column;gap:6px;">
           ${ex.sets.map((s, idx) => `
             <div style="display:flex;align-items:center;gap:6px;">
@@ -734,7 +838,7 @@ function renderGeradorDieta() {
       <div style="display:flex;justify-content:space-between;align-items:center;">
         <div>
           <div style="font-weight:800;font-size:13.5px;">Gerar dieta automaticamente</div>
-          <div style="font-size:11px;color:var(--text-muted);margin-top:2px;">Plano calculado com base no seu perfil (grátis)</div>
+          <div style="font-size:11px;color:var(--text-muted);margin-top:2px;">Vira sua dieta padrão todo dia — só muda se você gerar de novo (grátis)</div>
         </div>
         <button data-action="toggle-ai-form" style="background:var(--accent-food);color:#14161A;border:none;border-radius:10px;padding:8px 14px;font-weight:800;font-size:12px;">
           ${state.showAiForm ? "Fechar" : "Gerar"}
@@ -793,7 +897,7 @@ function renderGeradorDieta() {
                   ${m.items && m.items.length ? `<div style="font-size:10.5px;color:var(--text-faint);margin-top:3px;">${m.items.map((it) => `${escapeHtml(it.name)} (${it.grams}g)`).join(" · ")}</div>` : ""}
                 </div>`).join("")}
               <div style="display:flex;gap:8px;margin-top:4px;">
-                <button data-action="apply-ai-plan" class="btn-primary" style="flex:1;background:var(--accent-energy);">Aplicar ao dia (substitui refeições)</button>
+                <button data-action="apply-ai-plan" class="btn-primary" style="flex:1;background:var(--accent-energy);">Definir como minha dieta fixa</button>
                 <button data-action="discard-ai-plan" class="btn-secondary">Descartar</button>
               </div>
             </div>` : ""}

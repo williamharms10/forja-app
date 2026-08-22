@@ -188,6 +188,12 @@ const EXERCISE_DB = [
   { name: "Torção de tronco sentado", muscle: "Alongamento", local: "Ambos" },
 ];
 
+// Busca exercícios equivalentes (mesmo grupo muscular), útil quando a academia
+// não tem o aparelho ou você quer uma opção diferente pra treinar em casa.
+function getExerciseSubstitutes(name, muscle, limit) {
+  return EXERCISE_DB.filter((e) => e.muscle === muscle && e.name !== name).slice(0, limit || 6);
+}
+
 const DEFAULT_PLANS = [
   {
     id: "planA", name: "Treino A — Peito e Tríceps", muscle: "Peito",

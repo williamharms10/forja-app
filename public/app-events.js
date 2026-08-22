@@ -63,6 +63,8 @@ function handleTabClick(e) {
       break;
     }
     case "show-manager": state.showManager = true; render(); break;
+    case "toggle-workout-rotation": toggleWorkoutRotation(); break;
+    case "restart-workout-rotation": restartWorkoutRotation(); break;
     case "toggle-workout-gen-form":
       state.showWorkoutGenForm = !state.showWorkoutGenForm;
       if (state.showWorkoutGenForm && state.aiForm.objetivo) {
@@ -89,6 +91,11 @@ function handleTabClick(e) {
     case "close-manager": state.showManager = false; render(); break;
     case "trocar-treino": trocarTreino(); break;
     case "remove-exercise": removeExercise(btn.dataset.ex); break;
+    case "toggle-exercise-swap-picker":
+      state.exerciseSwapTarget = state.exerciseSwapTarget === btn.dataset.ex ? null : btn.dataset.ex;
+      render();
+      break;
+    case "swap-exercise-item": swapExerciseItem(btn.dataset.ex, btn.dataset.newname); break;
     case "toggle-set": toggleSet(btn.dataset.ex, Number(btn.dataset.idx)); break;
     case "add-set": addSet(btn.dataset.ex); break;
     case "remove-set": removeSet(btn.dataset.ex, Number(btn.dataset.idx)); break;
@@ -237,8 +244,43 @@ function trocarTreino() {
   saveKey(`dayplan:${dk()}`, null).then(render);
 }
 
+function toggleWorkoutRotation() {
+  if (state.workoutRotation && state.workoutRotation.active) {
+    state.workoutRotation = { active: false, planIds: [], startDate: null };
+    saveKey("workoutRotation", state.workoutRotation).then(render);
+  } else {
+    if (state.plans.length === 0) return;
+    state.workoutRotation = { active: true, planIds: state.plans.map((p) => p.id), startDate: dk() };
+    saveKey("workoutRotation", state.workoutRotation).then(async () => {
+      await saveKey(`dayplan:${dk()}`, null);
+      await loadDayData();
+      render();
+    });
+  }
+}
+
+function restartWorkoutRotation() {
+  if (!state.workoutRotation) return;
+  state.workoutRotation = { ...state.workoutRotation, startDate: dk(), active: true };
+  saveKey("workoutRotation", state.workoutRotation).then(async () => {
+    await saveKey(`dayplan:${dk()}`, null);
+    await loadDayData();
+    render();
+  });
+}
+
 function removeExercise(id) {
   updateWorkout(state.workout.filter((e) => e.id !== id)).then(render);
+}
+
+function swapExerciseItem(exId, newName) {
+  const newEx = EXERCISE_DB.find((e) => e.name === newName);
+  if (!newEx) return;
+  const next = state.workout.map((e) => e.id !== exId ? e : { ...e, name: newEx.name, muscle: newEx.muscle });
+  updateWorkout(next).then(() => {
+    state.exerciseSwapTarget = null;
+    render();
+  });
 }
 
 function toggleSet(exId, idx) {
@@ -421,18 +463,29 @@ async function gerarDietaIA() {
 function applyAiPlan() {
   const plan = state.aiPlan;
   if (!plan) return;
-  const withIds = plan.meals.map((m) => ({
-    id: uid(), name: m.name, time: m.time || "",
+  const templateMeals = plan.meals.map((m) => ({
+    name: m.name, time: m.time || "",
     calories: Number(m.calories) || 0, protein: Number(m.protein) || 0,
     carb: Number(m.carb) || 0, fat: Number(m.fat) || 0,
     items: (m.items || []).map((it) => ({ name: it.name, grams: it.grams })),
   }));
+  const withIds = templateMeals.map((m) => ({ ...m, id: uid(), items: m.items.map((it) => ({ ...it })) }));
+
   updateMeals(withIds).then(async () => {
     await updateConfig({
       calorieGoal: Number(plan.calorieGoal) || DEFAULT_CONFIG.calorieGoal,
       proteinGoal: Number(plan.proteinGoal) || DEFAULT_CONFIG.proteinGoal,
       carbGoal: Number(plan.carbGoal) || DEFAULT_CONFIG.carbGoal,
       fatGoal: Number(plan.fatGoal) || DEFAULT_CONFIG.fatGoal,
+    });
+    // Salva como a dieta FIXA — vale pra todos os dias a partir de agora,
+    // até você gerar uma nova (dias já visitados antes não mudam retroativamente).
+    await saveKey("fixedDiet", {
+      calorieGoal: Number(plan.calorieGoal) || DEFAULT_CONFIG.calorieGoal,
+      proteinGoal: Number(plan.proteinGoal) || DEFAULT_CONFIG.proteinGoal,
+      carbGoal: Number(plan.carbGoal) || DEFAULT_CONFIG.carbGoal,
+      fatGoal: Number(plan.fatGoal) || DEFAULT_CONFIG.fatGoal,
+      meals: templateMeals,
     });
     state.aiPlan = null;
     state.showAiForm = false;
