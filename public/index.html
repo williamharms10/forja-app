@@ -103,5 +103,15 @@
     <script src="/voice.js"></script>
     <script src="/app.js"></script>
     <script src="/app-events.js"></script>
+    <script>
+      if ("serviceWorker" in navigator) {
+        window.addEventListener("load", () => {
+          navigator.serviceWorker.register("/sw.js").catch(() => {
+            // Se falhar, sem problema — o app continua funcionando normal,
+            // só sem essa camada extra de garantia de atualização.
+          });
+        });
+      }
+    </script>
   </body>
 </html>
