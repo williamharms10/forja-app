@@ -43,6 +43,7 @@ function handleTabChange(e) {
   if (t.id === "goal-water") updateConfig({ waterGoal: Number(t.value) || 0 }).then(render);
   if (t.id === "ai-peso" || t.id === "ai-meta-peso") render();
   if (t.id === "goal-weight") updateConfig({ weightGoal: Number(t.value) || 0 }).then(render);
+  if (t.id === "rest-seconds-input") updateConfig({ restSeconds: Math.max(5, Number(t.value) || 60) }).then(render);
 
   if (t.dataset.actionOnchange === "update-draft-grams") {
     const idx = Number(t.dataset.idx);
@@ -64,6 +65,7 @@ function handleTabClick(e) {
     }
     case "show-manager": state.showManager = true; render(); break;
     case "toggle-workout-rotation": toggleWorkoutRotation(); break;
+    case "toggle-rest-edit": state.showRestEdit = !state.showRestEdit; render(); break;
     case "restart-workout-rotation": restartWorkoutRotation(); break;
     case "toggle-workout-gen-form":
       state.showWorkoutGenForm = !state.showWorkoutGenForm;
@@ -97,6 +99,7 @@ function handleTabClick(e) {
       break;
     case "swap-exercise-item": swapExerciseItem(btn.dataset.ex, btn.dataset.newname); break;
     case "toggle-set": toggleSet(btn.dataset.ex, Number(btn.dataset.idx)); break;
+    case "skip-rest-timer": stopRestTimer(); break;
     case "add-set": addSet(btn.dataset.ex); break;
     case "remove-set": removeSet(btn.dataset.ex, Number(btn.dataset.idx)); break;
     case "show-extra-exercise": state.showExtraExerciseForm = true; render(); break;
@@ -284,8 +287,74 @@ function swapExerciseItem(exId, newName) {
 }
 
 function toggleSet(exId, idx) {
+  const ex = state.workout.find((e) => e.id === exId);
+  const wasDone = ex ? ex.sets[idx].done : false;
   const next = state.workout.map((e) => e.id !== exId ? e : { ...e, sets: e.sets.map((s, i) => i === idx ? { ...s, done: !s.done } : s) });
   updateWorkout(next).then(render);
+  if (!wasDone) startRestTimer(state.config.restSeconds || 60);
+}
+
+/* ---------------- CRONÔMETRO DE DESCANSO ---------------- */
+let restInterval = null;
+const restTimerState = { secondsLeft: 0, total: 0, active: false };
+
+function formatRestTime(s) {
+  const m = Math.floor(s / 60);
+  const sec = s % 60;
+  return `${m}:${String(sec).padStart(2, "0")}`;
+}
+
+function startRestTimer(seconds) {
+  clearInterval(restInterval);
+  restTimerState.total = seconds;
+  restTimerState.secondsLeft = seconds;
+  restTimerState.active = true;
+  render();
+  restInterval = setInterval(() => {
+    restTimerState.secondsLeft--;
+    const el = document.getElementById("rest-timer-seconds");
+    if (el) el.textContent = formatRestTime(restTimerState.secondsLeft);
+    if (restTimerState.secondsLeft <= 0) {
+      clearInterval(restInterval);
+      restTimerState.active = false;
+      notifyRestDone();
+      render();
+    }
+  }, 1000);
+}
+
+function stopRestTimer() {
+  clearInterval(restInterval);
+  restTimerState.active = false;
+  render();
+}
+
+function notifyRestDone() {
+  if (navigator.vibrate) { try { navigator.vibrate([200, 100, 200]); } catch (e) {} }
+  try {
+    const Ctx = window.AudioContext || window.webkitAudioContext;
+    const ctx = new Ctx();
+    const osc = ctx.createOscillator();
+    osc.frequency.value = 880;
+    osc.connect(ctx.destination);
+    osc.start();
+    osc.stop(ctx.currentTime + 0.3);
+  } catch (e) {}
+}
+
+function restTimerBarHTML() {
+  if (!restTimerState.active) return "";
+  const pct = restTimerState.total > 0 ? (restTimerState.total - restTimerState.secondsLeft) / restTimerState.total : 0;
+  return `
+    <div style="position:fixed;top:0;left:0;right:0;z-index:30;display:flex;justify-content:center;">
+      <div style="max-width:460px;width:100%;background:var(--accent-water);color:#14161A;padding:10px 16px;padding-top:calc(10px + env(safe-area-inset-top));display:flex;align-items:center;justify-content:space-between;box-shadow:0 4px 16px rgba(0,0,0,0.3);">
+        <div style="display:flex;align-items:center;gap:8px;">
+          <strong style="font-size:13px;">Descanso:</strong>
+          <span id="rest-timer-seconds" style="font-size:16px;font-weight:800;font-variant-numeric:tabular-nums;">${formatRestTime(restTimerState.secondsLeft)}</span>
+        </div>
+        <button data-action="skip-rest-timer" style="background:#14161A;color:var(--accent-water);border:none;border-radius:8px;padding:6px 12px;font-weight:700;font-size:12px;">Pular</button>
+      </div>
+    </div>`;
 }
 
 function editSet(exId, idx, field, val) {

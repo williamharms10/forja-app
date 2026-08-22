@@ -1,4 +1,4 @@
-const DEFAULT_CONFIG = { waterGoal: 2500, calorieGoal: 2200, proteinGoal: 150, carbGoal: 220, fatGoal: 70, weightGoal: 0, currentWeight: 0 };
+const DEFAULT_CONFIG = { waterGoal: 2500, calorieGoal: 2200, proteinGoal: 150, carbGoal: 220, fatGoal: 70, weightGoal: 0, currentWeight: 0, restSeconds: 60 };
 
 const state = {
   user: null,
@@ -20,6 +20,7 @@ const state = {
   workoutRotation: null,
   rotationExpired: false,
   rotationInfo: null,
+  showRestEdit: false,
   showExtraExerciseForm: false,
   showMealForm: false,
   showCustomFood: false,
@@ -333,6 +334,7 @@ function render() {
       </div>
     </div>
     ${voiceWidgetHTML()}
+    ${restTimerBarHTML()}
   `;
   document.getElementById("tab-content").innerHTML = renderTabContent();
   attachRootEvents();
@@ -375,6 +377,8 @@ function attachRootEvents() {
   });
   const logoutBtn = document.querySelector('[data-action="logout"]');
   if (logoutBtn) logoutBtn.addEventListener("click", () => auth.signOut());
+  const skipRestBtn = document.querySelector('[data-action="skip-rest-timer"]');
+  if (skipRestBtn) skipRestBtn.addEventListener("click", () => stopRestTimer());
 }
 
 /* ============ RESUMO ============ */
@@ -458,7 +462,21 @@ function renderTreino() {
       <button data-action="toggle-workout-rotation" style="background:none;border:none;color:${state.workoutRotation && state.workoutRotation.active ? "var(--accent-energy)" : "var(--text-faint)"};font-size:11.5px;display:flex;align-items:center;gap:4px;font-weight:700;">
         ${icon("scale", 12)} ${state.workoutRotation && state.workoutRotation.active ? "Desativar rotina fixa" : "Ativar rotina fixa"}
       </button>
+      <button data-action="toggle-rest-edit" style="background:none;border:none;color:var(--text-faint);font-size:11.5px;display:flex;align-items:center;gap:4px;">
+        ${icon("pencil", 12)} Descanso: ${state.config.restSeconds}s
+      </button>
     </div>`;
+
+  if (state.showRestEdit) {
+    html += `
+      <div class="card" style="padding:12px 16px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;">
+          <label style="font-size:12px;color:var(--text-muted);">Tempo de descanso entre séries (segundos)</label>
+          <input type="number" id="rest-seconds-input" value="${state.config.restSeconds}" min="5" step="5" style="width:80px;text-align:right;" />
+        </div>
+        <div style="font-size:10.5px;color:var(--text-faint);margin-top:6px;">Começa a contar sozinho toda vez que você marcar uma série como concluída.</div>
+      </div>`;
+  }
 
   if (state.showWorkoutGenForm) html += renderWorkoutGenerator();
 
@@ -505,7 +523,12 @@ function renderTreino() {
         <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;">
           <div>
             <div style="font-weight:700;font-size:15px;">${escapeHtml(ex.name)}</div>
-            <span style="font-size:10.5px;font-weight:700;color:${MUSCLE_COLOR[ex.muscle]};text-transform:uppercase;letter-spacing:0.5px;">${ex.muscle}</span>
+            <div style="display:flex;align-items:center;gap:8px;margin-top:2px;">
+              <span style="font-size:10.5px;font-weight:700;color:${MUSCLE_COLOR[ex.muscle]};text-transform:uppercase;letter-spacing:0.5px;">${ex.muscle}</span>
+              <a href="https://www.youtube.com/results?search_query=${encodeURIComponent(ex.name + " exercício execução técnica")}" target="_blank" rel="noopener" style="font-size:10.5px;color:var(--accent-water);text-decoration:none;display:flex;align-items:center;gap:3px;">
+                ${icon("play", 11)} demonstração
+              </a>
+            </div>
           </div>
           <div style="display:flex;gap:4px;">
             ${exSubs.length > 0 ? `
