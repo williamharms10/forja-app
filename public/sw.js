@@ -12,9 +12,14 @@ self.addEventListener("activate", (event) => {
 });
 
 self.addEventListener("fetch", (event) => {
-  // Sempre tenta buscar fresco da rede primeiro. Só usa algo salvo em cache
-  // como último recurso, se o dispositivo estiver de fato sem internet.
+  // Só mexe em pedidos GET (não interfere em nada que grava dados, tipo POST).
+  if (event.request.method !== "GET") return;
+
+  // Constrói o pedido do zero, sem reaproveitar o objeto original — alguns
+  // navegadores (Safari incluso) às vezes ignoram o "no-store" quando ele vem
+  // junto de um Request já pronto, então evitamos essa ambiguidade aqui.
+  const url = event.request.url;
   event.respondWith(
-    fetch(event.request, { cache: "no-store" }).catch(() => caches.match(event.request))
+    fetch(url, { cache: "no-store" }).catch(() => caches.match(event.request))
   );
 });
