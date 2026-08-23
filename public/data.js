@@ -186,6 +186,25 @@ const EXERCISE_DB = [
   { name: "Alongamento de adutores", muscle: "Alongamento", local: "Ambos", enQuery: "groin stretch" },
   { name: "Alongamento de flexores do quadril", muscle: "Alongamento", local: "Ambos", enQuery: "hip flexor stretch" },
   { name: "Torção de tronco sentado", muscle: "Alongamento", local: "Ambos", enQuery: "seated trunk rotation" },
+  // Aparelhos de máquina — nomes reais usados nas academias
+  { name: "Supino articulado (máquina)", muscle: "Peito", local: "Academia", enQuery: "hammer strength chest press" },
+  { name: "Voador inverso (deltoide posterior)", muscle: "Ombro", local: "Academia", enQuery: "reverse pec deck" },
+  { name: "Remada articulada (máquina)", muscle: "Costas", local: "Academia", enQuery: "hammer strength row machine" },
+  { name: "Remada cavalinho (T-bar row)", muscle: "Costas", local: "Academia", enQuery: "t bar row" },
+  { name: "Graviton (barra fixa assistida)", muscle: "Costas", local: "Academia", enQuery: "assisted pull up machine" },
+  { name: "Puxada alta unilateral", muscle: "Costas", local: "Academia", enQuery: "single arm lat pulldown" },
+  { name: "Hack machine (agachamento hack)", muscle: "Perna", local: "Academia", enQuery: "hack squat machine" },
+  { name: "Leg press horizontal", muscle: "Perna", local: "Academia", enQuery: "horizontal leg press" },
+  { name: "Panturrilha no leg press", muscle: "Perna", local: "Academia", enQuery: "calf press on leg press" },
+  { name: "Mesa flexora em pé (unilateral)", muscle: "Perna", local: "Academia", enQuery: "standing leg curl" },
+  { name: "Desenvolvimento articulado (máquina)", muscle: "Ombro", local: "Academia", enQuery: "hammer strength shoulder press" },
+  { name: "Elevação lateral na máquina", muscle: "Ombro", local: "Academia", enQuery: "lateral raise machine" },
+  { name: "Mergulho assistido (graviton)", muscle: "Braço", local: "Academia", enQuery: "assisted dip machine" },
+  { name: "Tríceps na polia alta (corda unilateral)", muscle: "Braço", local: "Academia", enQuery: "single arm triceps pushdown" },
+  { name: "Rosca na polia baixa", muscle: "Braço", local: "Academia", enQuery: "cable curl" },
+  { name: "Abdominal na polia (cable crunch)", muscle: "Core", local: "Academia", enQuery: "cable crunch" },
+  { name: "Rotativo de tronco (máquina)", muscle: "Core", local: "Academia", enQuery: "torso rotation machine" },
+  { name: "Cadeira romana (elevação de joelhos)", muscle: "Core", local: "Academia", enQuery: "captains chair leg raise" },
 ];
 
 // Busca exercícios equivalentes (mesmo grupo muscular), útil quando a academia

@@ -93,6 +93,15 @@ function handleTabClick(e) {
     case "close-manager": state.showManager = false; render(); break;
     case "trocar-treino": trocarTreino(); break;
     case "remove-exercise": removeExercise(btn.dataset.ex); break;
+    case "toggle-exercise-menu":
+      state.exerciseMenuTarget = state.exerciseMenuTarget === btn.dataset.ex ? null : btn.dataset.ex;
+      render();
+      break;
+    case "open-exercise-swap":
+      state.exerciseSwapTarget = btn.dataset.ex;
+      state.exerciseMenuTarget = null;
+      render();
+      break;
     case "toggle-exercise-swap-picker":
       state.exerciseSwapTarget = state.exerciseSwapTarget === btn.dataset.ex ? null : btn.dataset.ex;
       render();
@@ -273,6 +282,7 @@ function restartWorkoutRotation() {
 }
 
 function removeExercise(id) {
+  state.exerciseMenuTarget = null;
   updateWorkout(state.workout.filter((e) => e.id !== id)).then(render);
 }
 

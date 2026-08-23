@@ -35,6 +35,7 @@ const state = {
   showWaterGoalEdit: false,
   swapTarget: null,
   exerciseSwapTarget: null,
+  exerciseMenuTarget: null,
   mealForm: { name: "" },
   customFood: { name: "", kcal: "", protein: "", carb: "", fat: "" },
   extraExerciseForm: { name: "", muscle: MUSCLES[0], sets: 3, reps: 10, weight: 0 },
@@ -545,19 +546,21 @@ function renderTreino() {
   state.workout.forEach((ex) => {
     const exSubs = getExerciseSubstitutes(ex.name, ex.muscle);
     const exPickerOpen = state.exerciseSwapTarget === ex.id;
+    const exMenuOpen = state.exerciseMenuTarget === ex.id;
     html += `
       <div class="card">
-        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;position:relative;">
           <div>
             <div style="font-weight:700;font-size:15px;">${escapeHtml(ex.name)}</div>
             <span style="font-size:10.5px;font-weight:700;color:${MUSCLE_COLOR[ex.muscle]};text-transform:uppercase;letter-spacing:0.5px;">${ex.muscle}</span>
           </div>
-          <div style="display:flex;gap:4px;">
-            ${exSubs.length > 0 ? `
-              <button class="icon-btn" data-action="toggle-exercise-swap-picker" data-ex="${ex.id}" title="Trocar exercício" style="color:${exPickerOpen ? "var(--accent-energy)" : "var(--text-muted)"};">${icon("swap", 14)}</button>
-            ` : ""}
-            <button class="icon-btn" data-action="remove-exercise" data-ex="${ex.id}" style="color:#FF5C5C;">${icon("trash", 14)}</button>
-          </div>
+          <button class="icon-btn" data-action="toggle-exercise-menu" data-ex="${ex.id}" style="color:${exMenuOpen ? "var(--accent-energy)" : "var(--text-muted)"};">${icon("moreVertical", 15)}</button>
+          ${exMenuOpen ? `
+            <div style="position:absolute;top:34px;right:0;z-index:5;background:var(--surface-2);border:1px solid var(--border);border-radius:10px;overflow:hidden;box-shadow:0 8px 20px rgba(0,0,0,0.35);min-width:170px;">
+              ${exSubs.length > 0 ? `<button data-action="open-exercise-swap" data-ex="${ex.id}" style="display:flex;align-items:center;gap:6px;width:100%;background:none;border:none;padding:10px 12px;font-size:12.5px;color:var(--text);text-align:left;">${icon("swap", 13)} Trocar exercício</button>` : ""}
+              <button data-action="remove-exercise" data-ex="${ex.id}" style="display:flex;align-items:center;gap:6px;width:100%;background:none;border:none;padding:10px 12px;font-size:12.5px;color:#FF5C5C;text-align:left;border-top:1px solid var(--border);">${icon("trash", 13)} Remover exercício</button>
+            </div>
+          ` : ""}
         </div>
         ${exPickerOpen ? `
           <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;padding:8px;background:var(--surface-2);border-radius:8px;">
@@ -571,16 +574,15 @@ function renderTreino() {
         ` : ""}
         <div style="display:flex;flex-direction:column;gap:6px;">
           ${ex.sets.map((s, idx) => `
-            <div style="display:flex;align-items:center;gap:6px;">
-              <div style="width:20px;font-size:11px;color:var(--text-faint);font-weight:700;">${idx + 1}</div>
+            <div style="display:flex;align-items:center;gap:8px;">
+              <div style="width:16px;font-size:11px;color:var(--text-faint);font-weight:700;">${idx + 1}</div>
               <input type="number" value="${s.reps}" data-bind="set-reps" data-ex="${ex.id}" data-idx="${idx}" style="width:56px;" />
               <span style="font-size:11px;color:var(--text-faint);">reps</span>
               <input type="number" value="${s.weight}" data-bind="set-weight" data-ex="${ex.id}" data-idx="${idx}" style="width:60px;" />
               <span style="font-size:11px;color:var(--text-faint);">kg</span>
-              <button data-action="toggle-set" data-ex="${ex.id}" data-idx="${idx}" style="margin-left:auto;width:28px;height:28px;border-radius:8px;flex-shrink:0;border:1px solid ${s.done ? "var(--accent-energy)" : "var(--border)"};background:${s.done ? "var(--accent-energy)" : "transparent"};display:flex;align-items:center;justify-content:center;">
-                ${icon("check", 14, s.done ? "#14161A" : "var(--text-faint)")}
+              <button data-action="toggle-set" data-ex="${ex.id}" data-idx="${idx}" style="margin-left:auto;width:30px;height:30px;border-radius:8px;flex-shrink:0;border:1px solid ${s.done ? "var(--accent-energy)" : "var(--border)"};background:${s.done ? "var(--accent-energy)" : "transparent"};display:flex;align-items:center;justify-content:center;">
+                ${icon("check", 15, s.done ? "#14161A" : "var(--text-faint)")}
               </button>
-              <button data-action="remove-set" data-ex="${ex.id}" data-idx="${idx}" style="background:none;border:none;color:var(--text-faint);padding:2px;">${icon("x", 13)}</button>
             </div>
           `).join("")}
         </div>
