@@ -63,6 +63,11 @@ function handleTabClick(e) {
       if (plan) startPlan(plan);
       break;
     }
+    case "start-plan-from-manager": {
+      const plan = state.plans.find((p) => p.id === btn.dataset.planId);
+      if (plan) { startPlan(plan); state.showManager = false; }
+      break;
+    }
     case "show-manager": state.showManager = true; render(); break;
     case "toggle-workout-rotation": toggleWorkoutRotation(); break;
     case "toggle-treino-settings": state.showTreinoSettings = !state.showTreinoSettings; render(); break;

@@ -448,25 +448,6 @@ function renderTreino() {
         <div style="font-size:11.5px;color:var(--text-muted);margin-top:3px;margin-bottom:14px;">Monta uma divisão completa com base no seu objetivo — grátis, na hora.</div>
         <button data-action="toggle-workout-gen-form" class="btn-primary" style="background:var(--accent-energy);">Gerar treino</button>
       </div>`;
-
-    if (state.plans.length > 0) {
-      html += `
-        <div class="card">
-          <div style="font-weight:700;font-size:13px;margin-bottom:2px;">Ou escolha um treino pronto</div>
-          <div style="font-size:11px;color:var(--text-muted);margin-bottom:12px;">Os exercícios já vêm prontos pra essa divisão.</div>
-          <div style="display:flex;flex-direction:column;gap:8px;">
-            ${state.plans.map((plan) => `
-              <button data-action="start-plan" data-plan-id="${plan.id}" style="display:flex;justify-content:space-between;align-items:center;background:var(--surface-2);border:1px solid var(--border);border-radius:12px;padding:12px 14px;text-align:left;">
-                <div>
-                  <div style="font-weight:700;font-size:13.5px;">${escapeHtml(plan.name)}</div>
-                  <div style="font-size:11px;color:var(--text-faint);margin-top:2px;">${plan.exercises.length} exercícios</div>
-                </div>
-                <span style="width:10px;height:10px;border-radius:50%;background:${MUSCLE_COLOR[plan.muscle]};flex-shrink:0;"></span>
-              </button>
-            `).join("")}
-          </div>
-        </div>`;
-    }
   }
 
   if (state.rotationExpired) {
@@ -655,7 +636,10 @@ function renderPlanManager() {
               <div style="font-weight:700;font-size:13px;">${escapeHtml(plan.name)}</div>
               <div style="font-size:10.5px;color:var(--text-faint);">${plan.exercises.map((e) => e.name).join(", ")}</div>
             </div>
-            <button class="icon-btn" data-action="delete-plan" data-plan-id="${plan.id}" style="color:#FF5C5C;">${icon("trash", 13)}</button>
+            <div style="display:flex;gap:4px;flex-shrink:0;">
+              <button data-action="start-plan-from-manager" data-plan-id="${plan.id}" style="background:var(--surface);border:1px solid var(--accent-energy);color:var(--accent-energy);border-radius:8px;padding:6px 10px;font-size:11px;font-weight:700;">Usar</button>
+              <button class="icon-btn" data-action="delete-plan" data-plan-id="${plan.id}" style="color:#FF5C5C;">${icon("trash", 13)}</button>
+            </div>
           </div>
         `).join("")}
       </div>
