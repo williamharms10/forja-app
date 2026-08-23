@@ -92,6 +92,7 @@ function handleTabClick(e) {
     case "discard-workout-gen": state.workoutGenResult = null; render(); break;
     case "close-manager": state.showManager = false; render(); break;
     case "trocar-treino": trocarTreino(); break;
+    case "convert-workout-home": convertWorkoutToHome(); break;
     case "remove-exercise": removeExercise(btn.dataset.ex); break;
     case "toggle-exercise-menu":
       state.exerciseMenuTarget = state.exerciseMenuTarget === btn.dataset.ex ? null : btn.dataset.ex;
@@ -297,6 +298,28 @@ function swapExerciseItem(exId, newName) {
   updateWorkout(next).then(() => {
     state.exerciseSwapTarget = null;
     render();
+  });
+}
+
+// Troca de uma vez só todo exercício que só dá pra fazer na academia por um
+// equivalente de casa (mesmo grupo muscular), mantendo as séries/reps/pesos
+// que a pessoa já tinha ajustado em cada um.
+function convertWorkoutToHome() {
+  const next = state.workout.map((ex) => {
+    const dbEntry = EXERCISE_DB.find((e) => e.name === ex.name);
+    if (!dbEntry || dbEntry.local !== "Academia") return ex;
+    const subs = getExerciseSubstitutes(ex.name, ex.muscle);
+    const home = subs.find((s) => s.local === "Casa" || s.local === "Ambos");
+    if (!home) return ex;
+    return { ...ex, name: home.name, muscle: home.muscle };
+  });
+  updateWorkout(next).then(render);
+}
+
+function hasGymOnlyExercise() {
+  return state.workout.some((ex) => {
+    const dbEntry = EXERCISE_DB.find((e) => e.name === ex.name);
+    return dbEntry && dbEntry.local === "Academia";
   });
 }
 

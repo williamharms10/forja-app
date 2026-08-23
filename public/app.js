@@ -510,6 +510,13 @@ function renderTreino() {
         ` : ""}
         ${allDone ? `<div style="margin-top:12px;background:var(--accent-energy);color:#14161A;border-radius:10px;padding:9px;text-align:center;font-weight:800;font-size:13px;">💪 Treino concluído!</div>` : ""}
       </div>`;
+
+    if (hasGymOnlyExercise()) {
+      html += `
+        <button data-action="convert-workout-home" style="display:flex;align-items:center;justify-content:center;gap:6px;background:var(--surface);border:1px dashed var(--accent-water);color:var(--accent-water);border-radius:12px;padding:11px 0;font-weight:700;font-size:12.5px;width:100%;">
+          🏠 Não vou pra academia hoje — trocar por versão de casa
+        </button>`;
+    }
   }
 
   html += `
