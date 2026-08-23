@@ -135,12 +135,16 @@ async function loadDayData() {
       state.workout = [];
       state.rotationExpired = true;
     } else if (rotResult && rotResult.plan) {
-      const numSets = rotResult.plan.genSets || 3;
-      const numReps = rotResult.plan.genReps || 10;
-      const seededWorkout = rotResult.plan.exercises.map((ex) => ({
-        id: uid(), name: ex.name, muscle: ex.muscle,
-        sets: Array.from({ length: numSets }, () => ({ reps: numReps, weight: 0, done: false })),
-      }));
+      const defaultSets = rotResult.plan.genSets || 3;
+      const defaultReps = rotResult.plan.genReps || 10;
+      const seededWorkout = rotResult.plan.exercises.map((ex) => {
+        const numSets = ex.sets || defaultSets;
+        const numReps = ex.reps || defaultReps;
+        return {
+          id: uid(), name: ex.name, muscle: ex.muscle,
+          sets: Array.from({ length: numSets }, () => ({ reps: numReps, weight: 0, done: false })),
+        };
+      });
       state.workout = seededWorkout;
       state.dayPlanName = rotResult.plan.name;
       state.rotationInfo = rotResult;

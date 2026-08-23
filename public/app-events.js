@@ -238,12 +238,16 @@ function setupFoodSearch() {
 
 /* ---------------- TREINO: AÇÕES ---------------- */
 function startPlan(plan) {
-  const numSets = plan.genSets || 3;
-  const numReps = plan.genReps || 10;
-  const seeded = plan.exercises.map((ex) => ({
-    id: uid(), name: ex.name, muscle: ex.muscle,
-    sets: Array.from({ length: numSets }, () => ({ reps: numReps, weight: 0, done: false })),
-  }));
+  const defaultSets = plan.genSets || 3;
+  const defaultReps = plan.genReps || 10;
+  const seeded = plan.exercises.map((ex) => {
+    const numSets = ex.sets || defaultSets;
+    const numReps = ex.reps || defaultReps;
+    return {
+      id: uid(), name: ex.name, muscle: ex.muscle,
+      sets: Array.from({ length: numSets }, () => ({ reps: numReps, weight: 0, done: false })),
+    };
+  });
   updateWorkout(seeded).then(async () => {
     state.dayPlanName = plan.name;
     await saveKey(`dayplan:${dk()}`, { name: plan.name });

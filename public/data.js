@@ -374,18 +374,28 @@ const SPLIT_TEMPLATES = {
   ],
 };
 
+// Faixas de repetição baseadas em princípios comuns de treinamento:
+// força/composto ~8 reps, hipertrofia ~8-12, resistência/emagrecimento ~12-15+.
+// O primeiro exercício de cada grupo muscular no dia é tratado como "composto"
+// (mais pesado, menos reps); os seguintes como "isolados" (mais reps, foco em volume).
+function setsForGoal(objetivo, isCompound) {
+  if (objetivo === "Ganho de massa") return isCompound ? 4 : 3;
+  return 3;
+}
+function repsForGoal(objetivo, isCompound) {
+  const table = {
+    "Ganho de massa": isCompound ? 8 : 12,
+    "Manutenção": isCompound ? 10 : 12,
+    "Emagrecimento": isCompound ? 12 : 15,
+  };
+  return table[objetivo] || 12;
+}
+
 function generateWorkoutSplit(form) {
   const dias = Math.min(6, Math.max(2, Number(form.dias) || 3));
   const templates = SPLIT_TEMPLATES[dias];
   const local = form.local || "Ambos";
   const objetivo = form.objetivo || "Manutenção";
-
-  // Objetivo define volume/intensidade: emagrecimento = mais reps e menos descanso (cardio extra),
-  // ganho de massa = mais séries e reps moderadas, manutenção = equilibrado.
-  let sets, reps;
-  if (objetivo === "Emagrecimento") { sets = 3; reps = 15; }
-  else if (objetivo === "Ganho de massa") { sets = 4; reps = 10; }
-  else { sets = 3; reps = 12; }
 
   const pool = local === "Ambos" ? EXERCISE_DB : EXERCISE_DB.filter((e) => e.local === local || e.local === "Ambos");
 
@@ -394,17 +404,27 @@ function generateWorkoutSplit(form) {
     tpl.muscles.forEach((m) => {
       const candidates = pool.filter((e) => e.muscle === m);
       const perMuscle = Math.max(2, Math.floor(6 / tpl.muscles.length));
-      exercises = exercises.concat(candidates.slice(0, perMuscle));
+      candidates.slice(0, perMuscle).forEach((e, i) => {
+        const isCompound = i === 0; // primeiro da lista pro grupo = exercício principal
+        exercises.push({
+          name: e.name, muscle: e.muscle,
+          sets: setsForGoal(objetivo, isCompound),
+          reps: repsForGoal(objetivo, isCompound),
+        });
+      });
     });
     if (objetivo === "Emagrecimento") {
       const extra = pool.filter((e) => e.muscle === "Pliometria" || e.muscle === "Cardio");
-      if (extra.length > 0) exercises.push(extra[idx % extra.length]);
+      if (extra.length > 0) {
+        const e = extra[idx % extra.length];
+        exercises.push({ name: e.name, muscle: e.muscle, sets: 3, reps: 15 });
+      }
     }
     exercises = exercises.slice(0, 6);
     return {
       id: uid(), name: tpl.label, muscle: tpl.muscles[0],
-      exercises: exercises.map((e) => ({ name: e.name, muscle: e.muscle })),
-      genSets: sets, genReps: reps,
+      exercises,
+      genSets: setsForGoal(objetivo, true), genReps: repsForGoal(objetivo, true),
     };
   });
 }
