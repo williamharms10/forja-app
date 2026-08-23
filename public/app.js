@@ -20,7 +20,7 @@ const state = {
   workoutRotation: null,
   rotationExpired: false,
   rotationInfo: null,
-  showRestEdit: false,
+  showTreinoSettings: false,
   showExtraExerciseForm: false,
   showMealForm: false,
   showCustomFood: false,
@@ -97,23 +97,18 @@ auth.onAuthStateChanged(async (user) => {
   render();
 });
 
-function daysBetween(dateStrA, dateStrB) {
-  const a = new Date(dateStrA + "T00:00:00Z");
-  const b = new Date(dateStrB + "T00:00:00Z");
-  return Math.round((b - a) / 86400000);
-}
-
 const MAX_ROTATION_CYCLES = 10;
 
-function computeRotationPlanForDate(dateStr) {
+// Calcula qual treino vem a seguir com base na POSIÇÃO na sequência (não na data).
+// Isso significa que pular dias sem abrir o app não "perde" treinos nem embaralha
+// a ordem — o próximo treino sempre continua de onde parou.
+function computeRotationPlanForPosition(position) {
   const rot = state.workoutRotation;
   if (!rot || !rot.active || !rot.planIds || rot.planIds.length === 0) return null;
-  const diff = daysBetween(rot.startDate, dateStr);
-  if (diff < 0) return null;
   const len = rot.planIds.length;
-  const cycleNumber = Math.floor(diff / len) + 1;
+  const cycleNumber = Math.floor(position / len) + 1;
   if (cycleNumber > MAX_ROTATION_CYCLES) return { expired: true, cycleNumber };
-  const idx = diff % len;
+  const idx = position % len;
   const plan = state.plans.find((p) => p.id === rot.planIds[idx]);
   if (!plan) return null;
   return { plan, cycleNumber, dayInCycle: idx + 1, totalDays: len };
@@ -132,7 +127,8 @@ async function loadDayData() {
     state.dayPlanName = dp.name;
     state.workout = await loadKey(`workout:${key}`, []);
   } else if (state.workoutRotation && state.workoutRotation.active) {
-    const rotResult = computeRotationPlanForDate(key);
+    const position = state.workoutRotation.position || 0;
+    const rotResult = computeRotationPlanForPosition(position);
     if (rotResult && rotResult.expired) {
       state.dayPlanName = null;
       state.workout = [];
@@ -149,6 +145,10 @@ async function loadDayData() {
       state.rotationInfo = rotResult;
       await saveKey(`workout:${key}`, seededWorkout);
       await saveKey(`dayplan:${key}`, { name: rotResult.plan.name });
+      // Só avança a posição quando um treino NOVO é gerado pra esse dia — abrir
+      // o app várias vezes no mesmo dia não pula treinos da sequência.
+      state.workoutRotation = { ...state.workoutRotation, position: position + 1 };
+      await saveKey("workoutRotation", state.workoutRotation);
     } else {
       state.dayPlanName = null;
       state.workout = [];
@@ -431,12 +431,13 @@ function renderResumo() {
 /* ============ TREINO ============ */
 function renderTreino() {
   let html = "";
+  const rotationActive = state.workoutRotation && state.workoutRotation.active;
 
   if (!state.dayPlanName) {
     html += `
       <div class="card">
-        <div style="font-weight:700;font-size:14px;margin-bottom:2px;">Qual treino você vai fazer hoje?</div>
-        <div style="font-size:11.5px;color:var(--text-muted);margin-bottom:12px;">Escolha a divisão do dia — os exercícios já vêm prontos.</div>
+        <div style="font-weight:700;font-size:14px;margin-bottom:2px;">Escolha seu treino</div>
+        <div style="font-size:11.5px;color:var(--text-muted);margin-bottom:12px;">Os exercícios já vêm prontos pra essa divisão.</div>
         <div style="display:flex;flex-direction:column;gap:8px;">
           ${state.plans.map((plan) => `
             <button data-action="start-plan" data-plan-id="${plan.id}" style="display:flex;justify-content:space-between;align-items:center;background:var(--surface-2);border:1px solid var(--border);border-radius:12px;padding:12px 14px;text-align:left;">
@@ -451,35 +452,6 @@ function renderTreino() {
       </div>`;
   }
 
-  html += `
-    <div style="display:flex;gap:14px;flex-wrap:wrap;">
-      <button data-action="show-manager" style="background:none;border:none;color:var(--text-faint);font-size:11.5px;display:flex;align-items:center;gap:4px;">
-        ${icon("pencil", 12)} Gerenciar treinos
-      </button>
-      <button data-action="toggle-workout-gen-form" style="background:none;border:none;color:var(--accent-energy);font-size:11.5px;display:flex;align-items:center;gap:4px;font-weight:700;">
-        ${icon("dumbbell", 12)} Gerar treino automaticamente
-      </button>
-      <button data-action="toggle-workout-rotation" style="background:none;border:none;color:${state.workoutRotation && state.workoutRotation.active ? "var(--accent-energy)" : "var(--text-faint)"};font-size:11.5px;display:flex;align-items:center;gap:4px;font-weight:700;">
-        ${icon("scale", 12)} ${state.workoutRotation && state.workoutRotation.active ? "Desativar rotina fixa" : "Ativar rotina fixa"}
-      </button>
-      <button data-action="toggle-rest-edit" style="background:none;border:none;color:var(--text-faint);font-size:11.5px;display:flex;align-items:center;gap:4px;">
-        ${icon("pencil", 12)} Descanso: ${state.config.restSeconds}s
-      </button>
-    </div>`;
-
-  if (state.showRestEdit) {
-    html += `
-      <div class="card" style="padding:12px 16px;">
-        <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;">
-          <label style="font-size:12px;color:var(--text-muted);">Tempo de descanso entre séries (segundos)</label>
-          <input type="number" id="rest-seconds-input" value="${state.config.restSeconds}" min="5" step="5" style="width:80px;text-align:right;" />
-        </div>
-        <div style="font-size:10.5px;color:var(--text-faint);margin-top:6px;">Começa a contar sozinho toda vez que você marcar uma série como concluída.</div>
-      </div>`;
-  }
-
-  if (state.showWorkoutGenForm) html += renderWorkoutGenerator();
-
   if (state.rotationExpired) {
     html += `
       <div class="card" style="border-color:#FF9C7A;">
@@ -493,16 +465,58 @@ function renderTreino() {
   }
 
   if (state.dayPlanName) {
+    const sp = setsProgress();
     html += `
-      <div class="card" style="display:flex;justify-content:space-between;align-items:center;padding:12px 16px;">
-        <div>
-          <div style="font-size:10.5px;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.5px;">Treino de hoje</div>
-          <div style="font-weight:700;font-size:14px;">${escapeHtml(state.dayPlanName)}</div>
-          ${state.rotationInfo ? `<div style="font-size:10.5px;color:var(--accent-energy);margin-top:2px;">Rotina fixa · Ciclo ${state.rotationInfo.cycleNumber} de ${MAX_ROTATION_CYCLES} · Dia ${state.rotationInfo.dayInCycle}/${state.rotationInfo.totalDays}</div>` : ""}
+      <div class="card" style="padding:14px 16px;">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+          <div>
+            ${rotationActive && state.rotationInfo ? `
+              <div style="font-size:10.5px;color:var(--accent-energy);font-weight:700;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:3px;">
+                Ciclo ${state.rotationInfo.cycleNumber} de ${MAX_ROTATION_CYCLES} · Treino ${state.rotationInfo.dayInCycle} de ${state.rotationInfo.totalDays}
+              </div>
+            ` : `
+              <div style="font-size:10.5px;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:3px;">Treino atual</div>
+            `}
+            <div style="font-weight:700;font-size:16px;">${escapeHtml(state.dayPlanName)}</div>
+          </div>
+          <button data-action="trocar-treino" class="btn-secondary" style="padding:7px 12px;font-size:11.5px;flex-shrink:0;">Trocar</button>
         </div>
-        <button data-action="trocar-treino" class="btn-secondary" style="padding:7px 12px;font-size:11.5px;">Trocar</button>
+        ${rotationActive && state.rotationInfo ? `
+          <div style="display:flex;gap:4px;margin-top:10px;">
+            ${Array.from({ length: state.rotationInfo.totalDays }).map((_, i) => `
+              <span style="flex:1;height:4px;border-radius:2px;background:${i < state.rotationInfo.dayInCycle ? "var(--accent-energy)" : "var(--border)"};"></span>
+            `).join("")}
+          </div>
+        ` : ""}
+        ${state.workout.length > 0 ? `<div style="font-size:11px;color:var(--text-faint);margin-top:8px;">${sp.done}/${sp.total} séries concluídas</div>` : ""}
       </div>`;
   }
+
+  html += `
+    <button data-action="toggle-treino-settings" style="display:flex;align-items:center;gap:6px;background:none;border:none;color:var(--text-faint);font-size:11.5px;padding:2px 0;">
+      ${icon("pencil", 12)} Configurações do treino ${state.showTreinoSettings ? "▲" : "▼"}
+    </button>`;
+
+  if (state.showTreinoSettings) {
+    html += `
+      <div class="card" style="display:flex;flex-direction:column;gap:10px;">
+        <button data-action="show-manager" style="background:none;border:none;color:var(--text);font-size:12.5px;display:flex;align-items:center;gap:6px;text-align:left;">
+          ${icon("pencil", 13)} Gerenciar treinos
+        </button>
+        <button data-action="toggle-workout-gen-form" style="background:none;border:none;color:var(--accent-energy);font-size:12.5px;display:flex;align-items:center;gap:6px;font-weight:700;text-align:left;">
+          ${icon("dumbbell", 13)} Gerar treino automaticamente
+        </button>
+        <button data-action="toggle-workout-rotation" style="background:none;border:none;color:${rotationActive ? "var(--accent-energy)" : "var(--text)"};font-size:12.5px;display:flex;align-items:center;gap:6px;font-weight:700;text-align:left;">
+          ${icon("scale", 13)} ${rotationActive ? "Desativar rotina fixa" : "Ativar rotina fixa (repete sozinha por 10 ciclos)"}
+        </button>
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding-top:6px;border-top:1px solid var(--border);">
+          <label style="font-size:12.5px;color:var(--text);">Tempo de descanso (segundos)</label>
+          <input type="number" id="rest-seconds-input" value="${state.config.restSeconds}" min="5" step="5" style="width:80px;text-align:right;" />
+        </div>
+      </div>`;
+  }
+
+  if (state.showWorkoutGenForm) html += renderWorkoutGenerator();
 
   if (state.showManager) html += renderPlanManager();
 

@@ -190,8 +190,13 @@ const EXERCISE_DB = [
 
 // Busca exercícios equivalentes (mesmo grupo muscular), útil quando a academia
 // não tem o aparelho ou você quer uma opção diferente pra treinar em casa.
+// Prioriza sugerir primeiro os que dá pra fazer em qualquer lugar (mais chance
+// de você conseguir fazer na hora), deixando os que exigem academia por último.
 function getExerciseSubstitutes(name, muscle, limit) {
-  return EXERCISE_DB.filter((e) => e.muscle === muscle && e.name !== name).slice(0, limit || 6);
+  const priority = { "Ambos": 0, "Casa": 1, "Academia": 2 };
+  const subs = EXERCISE_DB.filter((e) => e.muscle === muscle && e.name !== name);
+  subs.sort((a, b) => (priority[a.local] ?? 3) - (priority[b.local] ?? 3));
+  return subs.slice(0, limit || 6);
 }
 
 const DEFAULT_PLANS = [

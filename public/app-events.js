@@ -65,7 +65,7 @@ function handleTabClick(e) {
     }
     case "show-manager": state.showManager = true; render(); break;
     case "toggle-workout-rotation": toggleWorkoutRotation(); break;
-    case "toggle-rest-edit": state.showRestEdit = !state.showRestEdit; render(); break;
+    case "toggle-treino-settings": state.showTreinoSettings = !state.showTreinoSettings; render(); break;
     case "restart-workout-rotation": restartWorkoutRotation(); break;
     case "toggle-workout-gen-form":
       state.showWorkoutGenForm = !state.showWorkoutGenForm;
@@ -249,11 +249,11 @@ function trocarTreino() {
 
 function toggleWorkoutRotation() {
   if (state.workoutRotation && state.workoutRotation.active) {
-    state.workoutRotation = { active: false, planIds: [], startDate: null };
+    state.workoutRotation = { active: false, planIds: [], position: 0 };
     saveKey("workoutRotation", state.workoutRotation).then(render);
   } else {
     if (state.plans.length === 0) return;
-    state.workoutRotation = { active: true, planIds: state.plans.map((p) => p.id), startDate: dk() };
+    state.workoutRotation = { active: true, planIds: state.plans.map((p) => p.id), position: 0 };
     saveKey("workoutRotation", state.workoutRotation).then(async () => {
       await saveKey(`dayplan:${dk()}`, null);
       await loadDayData();
@@ -264,7 +264,7 @@ function toggleWorkoutRotation() {
 
 function restartWorkoutRotation() {
   if (!state.workoutRotation) return;
-  state.workoutRotation = { ...state.workoutRotation, startDate: dk(), active: true };
+  state.workoutRotation = { ...state.workoutRotation, position: 0, active: true };
   saveKey("workoutRotation", state.workoutRotation).then(async () => {
     await saveKey(`dayplan:${dk()}`, null);
     await loadDayData();
