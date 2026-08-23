@@ -435,21 +435,31 @@ function renderTreino() {
 
   if (!state.dayPlanName) {
     html += `
-      <div class="card">
-        <div style="font-weight:700;font-size:14px;margin-bottom:2px;">Escolha seu treino</div>
-        <div style="font-size:11.5px;color:var(--text-muted);margin-bottom:12px;">Os exercícios já vêm prontos pra essa divisão.</div>
-        <div style="display:flex;flex-direction:column;gap:8px;">
-          ${state.plans.map((plan) => `
-            <button data-action="start-plan" data-plan-id="${plan.id}" style="display:flex;justify-content:space-between;align-items:center;background:var(--surface-2);border:1px solid var(--border);border-radius:12px;padding:12px 14px;text-align:left;">
-              <div>
-                <div style="font-weight:700;font-size:13.5px;">${escapeHtml(plan.name)}</div>
-                <div style="font-size:11px;color:var(--text-faint);margin-top:2px;">${plan.exercises.length} exercícios</div>
-              </div>
-              <span style="width:10px;height:10px;border-radius:50%;background:${MUSCLE_COLOR[plan.muscle]};flex-shrink:0;"></span>
-            </button>
-          `).join("")}
-        </div>
+      <div class="card" style="border-color:var(--accent-energy);text-align:center;padding:22px 18px;">
+        ${icon("dumbbell", 26, "var(--accent-energy)")}
+        <div style="font-weight:800;font-size:15px;margin-top:8px;">Gerar treino automaticamente</div>
+        <div style="font-size:11.5px;color:var(--text-muted);margin-top:3px;margin-bottom:14px;">Monta uma divisão completa com base no seu objetivo — grátis, na hora.</div>
+        <button data-action="toggle-workout-gen-form" class="btn-primary" style="background:var(--accent-energy);">Gerar treino</button>
       </div>`;
+
+    if (state.plans.length > 0) {
+      html += `
+        <div class="card">
+          <div style="font-weight:700;font-size:13px;margin-bottom:2px;">Ou escolha um treino pronto</div>
+          <div style="font-size:11px;color:var(--text-muted);margin-bottom:12px;">Os exercícios já vêm prontos pra essa divisão.</div>
+          <div style="display:flex;flex-direction:column;gap:8px;">
+            ${state.plans.map((plan) => `
+              <button data-action="start-plan" data-plan-id="${plan.id}" style="display:flex;justify-content:space-between;align-items:center;background:var(--surface-2);border:1px solid var(--border);border-radius:12px;padding:12px 14px;text-align:left;">
+                <div>
+                  <div style="font-weight:700;font-size:13.5px;">${escapeHtml(plan.name)}</div>
+                  <div style="font-size:11px;color:var(--text-faint);margin-top:2px;">${plan.exercises.length} exercícios</div>
+                </div>
+                <span style="width:10px;height:10px;border-radius:50%;background:${MUSCLE_COLOR[plan.muscle]};flex-shrink:0;"></span>
+              </button>
+            `).join("")}
+          </div>
+        </div>`;
+    }
   }
 
   if (state.rotationExpired) {
@@ -466,10 +476,12 @@ function renderTreino() {
 
   if (state.dayPlanName) {
     const sp = setsProgress();
+    const setPct = sp.total ? sp.done / sp.total : 0;
+    const allDone = sp.total > 0 && sp.done === sp.total;
     html += `
       <div class="card" style="padding:14px 16px;">
-        <div style="display:flex;justify-content:space-between;align-items:flex-start;">
-          <div>
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;">
+          <div style="flex:1;min-width:0;">
             ${rotationActive && state.rotationInfo ? `
               <div style="font-size:10.5px;color:var(--accent-energy);font-weight:700;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:3px;">
                 Ciclo ${state.rotationInfo.cycleNumber} de ${MAX_ROTATION_CYCLES} · Treino ${state.rotationInfo.dayInCycle} de ${state.rotationInfo.totalDays}
@@ -478,8 +490,9 @@ function renderTreino() {
               <div style="font-size:10.5px;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:3px;">Treino atual</div>
             `}
             <div style="font-weight:700;font-size:16px;">${escapeHtml(state.dayPlanName)}</div>
+            <button data-action="trocar-treino" style="background:none;border:none;color:var(--text-faint);font-size:11px;padding:0;margin-top:4px;text-decoration:underline;">Trocar treino</button>
           </div>
-          <button data-action="trocar-treino" class="btn-secondary" style="padding:7px 12px;font-size:11.5px;flex-shrink:0;">Trocar</button>
+          ${sp.total > 0 ? ringHTML(setPct, allDone ? "var(--accent-energy)" : "var(--accent-water)", `<span style="font-size:12px;font-weight:800;">${sp.done}/${sp.total}</span>`, 56, 6) : ""}
         </div>
         ${rotationActive && state.rotationInfo ? `
           <div style="display:flex;gap:4px;margin-top:10px;">
@@ -488,7 +501,7 @@ function renderTreino() {
             `).join("")}
           </div>
         ` : ""}
-        ${state.workout.length > 0 ? `<div style="font-size:11px;color:var(--text-faint);margin-top:8px;">${sp.done}/${sp.total} séries concluídas</div>` : ""}
+        ${allDone ? `<div style="margin-top:12px;background:var(--accent-energy);color:#14161A;border-radius:10px;padding:9px;text-align:center;font-weight:800;font-size:13px;">💪 Treino concluído!</div>` : ""}
       </div>`;
   }
 
