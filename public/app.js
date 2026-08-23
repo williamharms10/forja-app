@@ -321,11 +321,13 @@ function render() {
             <button class="icon-btn" data-action="logout" title="Sair">${icon("logout", 14)}</button>
           </div>
         </div>
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-top:14px;">
-          <button class="icon-btn" data-action="change-day" data-delta="-1">${icon("chevronLeft", 16)}</button>
-          <div style="font-size:13px;color:var(--text-muted);font-weight:600;text-transform:capitalize;">${fmtDate(state.selectedDate)}</div>
-          <button class="icon-btn" data-action="change-day" data-delta="1" style="opacity:${isToday() ? 0.3 : 1};">${icon("chevronRight", 16)}</button>
-        </div>
+        ${state.tab !== "treino" ? `
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-top:14px;">
+            <button class="icon-btn" data-action="change-day" data-delta="-1">${icon("chevronLeft", 16)}</button>
+            <div style="font-size:13px;color:var(--text-muted);font-weight:600;text-transform:capitalize;">${fmtDate(state.selectedDate)}</div>
+            <button class="icon-btn" data-action="change-day" data-delta="1" style="opacity:${isToday() ? 0.3 : 1};">${icon("chevronRight", 16)}</button>
+          </div>
+        ` : ""}
       </div>
 
       <div class="scrollarea" style="flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:14px;" id="tab-content"></div>
