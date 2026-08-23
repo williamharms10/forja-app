@@ -444,9 +444,9 @@ function renderTreino() {
     html += `
       <div class="card" style="border-color:var(--accent-energy);text-align:center;padding:22px 18px;">
         ${icon("dumbbell", 26, "var(--accent-energy)")}
-        <div style="font-weight:800;font-size:15px;margin-top:8px;">Gerar treino automaticamente</div>
+        <div style="font-weight:800;font-size:15px;margin-top:8px;">Gerar plano de treino</div>
         <div style="font-size:11.5px;color:var(--text-muted);margin-top:3px;margin-bottom:14px;">Monta uma divisão completa com base no seu objetivo — grátis, na hora.</div>
-        <button data-action="toggle-workout-gen-form" class="btn-primary" style="background:var(--accent-energy);">Gerar treino</button>
+        <button data-action="toggle-workout-gen-form" class="btn-primary" style="background:var(--accent-energy);">Gerar plano de treino</button>
       </div>`;
   }
 
@@ -498,30 +498,6 @@ function renderTreino() {
           🏠 Não vou pra academia hoje — trocar por versão de casa
         </button>`;
     }
-  }
-
-  html += `
-    <button data-action="toggle-treino-settings" style="display:flex;align-items:center;gap:6px;background:none;border:none;color:var(--text-faint);font-size:11.5px;padding:2px 0;">
-      ${icon("pencil", 12)} Configurações do treino ${state.showTreinoSettings ? "▲" : "▼"}
-    </button>`;
-
-  if (state.showTreinoSettings) {
-    html += `
-      <div class="card" style="display:flex;flex-direction:column;gap:10px;">
-        <button data-action="show-manager" style="background:none;border:none;color:var(--text);font-size:12.5px;display:flex;align-items:center;gap:6px;text-align:left;">
-          ${icon("pencil", 13)} Gerenciar treinos
-        </button>
-        <button data-action="toggle-workout-gen-form" style="background:none;border:none;color:var(--accent-energy);font-size:12.5px;display:flex;align-items:center;gap:6px;font-weight:700;text-align:left;">
-          ${icon("dumbbell", 13)} Gerar treino automaticamente
-        </button>
-        <button data-action="toggle-workout-rotation" style="background:none;border:none;color:${rotationActive ? "var(--accent-energy)" : "var(--text)"};font-size:12.5px;display:flex;align-items:center;gap:6px;font-weight:700;text-align:left;">
-          ${icon("scale", 13)} ${rotationActive ? "Desativar rotina fixa" : "Ativar rotina fixa (repete sozinha por 10 ciclos)"}
-        </button>
-        <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding-top:6px;border-top:1px solid var(--border);">
-          <label style="font-size:12.5px;color:var(--text);">Tempo de descanso (segundos)</label>
-          <input type="number" id="rest-seconds-input" value="${state.config.restSeconds}" min="5" step="5" style="width:80px;text-align:right;" />
-        </div>
-      </div>`;
   }
 
   if (state.showWorkoutGenForm) html += renderWorkoutGenerator();
@@ -684,7 +660,7 @@ function renderWorkoutGenerator() {
     <div class="card" style="border-color:var(--accent-energy);">
       <div style="display:flex;justify-content:space-between;align-items:center;">
         <div>
-          <div style="font-weight:800;font-size:13.5px;">Gerar treino automaticamente</div>
+          <div style="font-weight:800;font-size:13.5px;">Gerar plano de treino</div>
           <div style="font-size:11px;color:var(--text-muted);margin-top:2px;">Divisão montada com base no seu objetivo (grátis)</div>
         </div>
         <button data-action="toggle-workout-gen-form" style="background:var(--accent-energy);color:#14161A;border:none;border-radius:10px;padding:8px 14px;font-weight:800;font-size:12px;">Fechar</button>
