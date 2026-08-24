@@ -85,12 +85,16 @@ function handleTabClick(e) {
       render();
       break;
     case "apply-workout-gen": {
-      const next = [...state.plans, ...state.workoutGenResult];
+      const generated = state.workoutGenResult;
+      const next = [...state.plans, ...generated];
       saveKey("plans", next).then(() => {
         state.plans = next;
         state.workoutGenResult = null;
         state.showWorkoutGenForm = false;
-        render();
+        // Já ativa o primeiro treino da divisão gerada como o treino atual —
+        // sem isso, o plano ficava salvo mas nunca "ligado" de verdade.
+        if (generated && generated.length > 0) startPlan(generated[0]);
+        else render();
       });
       break;
     }
