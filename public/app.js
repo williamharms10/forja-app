@@ -95,6 +95,7 @@ auth.onAuthStateChanged(async (user) => {
   state.workoutRotation = await loadKey("workoutRotation", null);
   await loadDayData();
   await computeStreak();
+  await loadProgressData();
   render();
 });
 
@@ -308,9 +309,9 @@ function render() {
   const root = document.getElementById("root");
   root.innerHTML = `
     <div style="max-width:460px;width:100%;margin:0 auto;min-height:100dvh;display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom);">
-      <div style="padding:18px 18px 14px;border-bottom:1px solid var(--border);background:linear-gradient(180deg, var(--surface) 0%, var(--bg) 100%);">
+      <div style="padding:20px 18px 16px;border-bottom:1px solid var(--border);background:radial-gradient(120% 100% at 15% 0%, rgba(200,255,77,0.09), transparent 55%), linear-gradient(180deg, var(--surface) 0%, var(--bg) 100%);">
         <div style="display:flex;align-items:center;justify-content:space-between;">
-          <div style="font-size:26px;letter-spacing:1px;font-weight:800;text-transform:uppercase;">
+          <div style="font-size:27px;letter-spacing:0.5px;font-weight:800;text-transform:uppercase;">
             FORJ<span style="color:var(--accent-energy);">A</span>
           </div>
           <div style="display:flex;align-items:center;gap:8px;">
@@ -321,7 +322,7 @@ function render() {
             <button class="icon-btn" data-action="logout" title="Sair">${icon("logout", 14)}</button>
           </div>
         </div>
-        ${state.tab !== "treino" ? `
+        ${state.tab !== "treino" && state.tab !== "dieta" ? `
           <div style="display:flex;align-items:center;justify-content:space-between;margin-top:14px;">
             <button class="icon-btn" data-action="change-day" data-delta="-1">${icon("chevronLeft", 16)}</button>
             <div style="font-size:13px;color:var(--text-muted);font-weight:600;text-transform:capitalize;">${fmtDate(state.selectedDate)}</div>
@@ -330,14 +331,13 @@ function render() {
         ` : ""}
       </div>
 
-      <div class="scrollarea" style="flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:14px;" id="tab-content"></div>
+      <div class="scrollarea" style="flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:16px;" id="tab-content"></div>
 
       <div style="display:flex;border-top:1px solid var(--border);background:var(--surface);">
         ${tabBtnHTML("resumo", "trending", "Resumo", "var(--text)")}
         ${tabBtnHTML("treino", "dumbbell", "Treino", "var(--accent-energy)")}
         ${tabBtnHTML("dieta", "apple", "Dieta", "var(--accent-food)")}
         ${tabBtnHTML("agua", "droplet", "Água", "var(--accent-water)")}
-        ${tabBtnHTML("progresso", "chart", "Progresso", "var(--accent-energy)")}
       </div>
     </div>
     ${voiceWidgetHTML()}
@@ -363,21 +363,13 @@ function renderTabContent() {
   if (state.tab === "treino") return renderTreino();
   if (state.tab === "dieta") return renderDieta();
   if (state.tab === "agua") return renderAgua();
-  if (state.tab === "progresso") return renderProgresso();
   return "";
 }
 
 /* Eventos de nível raiz (header, tabbar) — sempre presentes */
 function attachRootEvents() {
   document.querySelectorAll('[data-action="change-tab"]').forEach((btn) => {
-    btn.addEventListener("click", () => {
-      state.tab = btn.dataset.tab;
-      if (state.tab === "progresso" && !state.progressLoaded && !state.progressLoading) {
-        loadProgressData();
-      } else {
-        render();
-      }
-    });
+    btn.addEventListener("click", () => { state.tab = btn.dataset.tab; render(); });
   });
   document.querySelectorAll('[data-action="change-day"]').forEach((btn) => {
     btn.addEventListener("click", () => changeDay(Number(btn.dataset.delta)).then(render));
@@ -396,7 +388,7 @@ function renderResumo() {
   const sp = setsProgress();
   const setPct = sp.total ? sp.done / sp.total : 0;
 
-  return `
+  let html = `
     <div class="card">
       <div style="font-size:12px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:14px;font-weight:700;">Resumo do dia</div>
       <div style="display:flex;justify-content:space-around;flex-wrap:wrap;gap:12px;">
@@ -421,18 +413,68 @@ function renderResumo() {
       ${macroRowHTML("Carboidrato", totals.carb, state.config.carbGoal, "#FFD166", "g")}
       ${macroRowHTML("Gordura", totals.fat, state.config.fatGoal, "#4FE3C2", "g")}
     </div>
+  `;
 
-    <div style="display:flex;gap:10px;">
-      <div class="card" style="flex:1;text-align:center;margin-bottom:0;">
-        <div style="font-size:22px;font-weight:800;color:var(--accent-energy);">${state.workout.length}</div>
-        <div style="font-size:11px;color:var(--text-muted);">Exercícios hoje</div>
+  if (state.progressLoading || !state.progressLoaded) {
+    html += `<div class="card" style="text-align:center;padding:26px 16px;color:var(--text-muted);font-size:13px;">Carregando progresso...</div>`;
+    return html;
+  }
+
+  const validWeights = state.weightHistory.filter((h) => h.kg != null);
+  const currentWeight = validWeights.length ? validWeights[validWeights.length - 1].kg : null;
+  const goal = state.config.weightGoal;
+  const diff = currentWeight != null && goal ? currentWeight - goal : null;
+  const chart = weightChartSVG(state.weightHistory);
+  const trainingDays = state.trainingHistory.filter((h) => h.exercises > 0).length;
+
+  html += `
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+        <div style="font-size:12px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;font-weight:700;">Peso</div>
+        <button data-action="toggle-weight-goal-edit" style="background:none;border:none;color:var(--text-faint);display:flex;align-items:center;gap:4px;font-size:11px;">${icon("pencil", 12)} Meta</button>
       </div>
-      <div class="card" style="flex:1;text-align:center;margin-bottom:0;">
-        <div style="font-size:22px;font-weight:800;color:var(--accent-water);">${state.water}<span style="font-size:12px;"> ml</span></div>
-        <div style="font-size:11px;color:var(--text-muted);">de ${state.config.waterGoal} ml</div>
+      <div style="display:flex;gap:16px;align-items:center;flex-wrap:wrap;">
+        <div>
+          <div style="font-size:26px;font-weight:800;">${currentWeight != null ? currentWeight.toFixed(1) : "--"}<span style="font-size:13px;color:var(--text-muted);"> kg</span></div>
+          <div style="font-size:11px;color:var(--text-faint);">Peso atual</div>
+        </div>
+        <div style="width:1px;height:32px;background:var(--border);"></div>
+        <div>
+          <div style="font-size:20px;font-weight:800;color:var(--accent-energy);">${goal ? goal.toFixed(1) : "--"}<span style="font-size:12px;color:var(--text-muted);"> kg</span></div>
+          <div style="font-size:11px;color:var(--text-faint);">Meta</div>
+        </div>
+        ${diff != null ? `
+          <div style="margin-left:auto;text-align:right;">
+            <div style="font-size:14px;font-weight:700;color:${Math.abs(diff) < 0.3 ? "var(--accent-energy)" : "var(--text-muted)"};">${diff > 0 ? "+" : ""}${diff.toFixed(1)} kg</div>
+            <div style="font-size:10.5px;color:var(--text-faint);">${diff > 0 ? "acima da meta" : diff < 0 ? "abaixo da meta" : "na meta"}</div>
+          </div>` : ""}
+      </div>
+      ${state.showWeightGoalEdit ? `<div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border);">${goalInputHTML("Meta de peso (kg)", "goal-weight", state.config.weightGoal)}</div>` : ""}
+      <div style="display:flex;gap:8px;margin-top:14px;">
+        <input type="number" step="0.1" id="weight-input" data-model="weightInput" value="${escapeHtml(state.weightInput)}" placeholder="Registrar peso de hoje (kg)" />
+        <button data-action="save-weight" style="background:var(--accent-energy);color:#14161A;border:none;border-radius:8px;padding:0 16px;font-weight:800;font-size:12.5px;">Salvar</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div style="font-size:12px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;font-weight:700;margin-bottom:10px;">Evolução do peso (30 dias)</div>
+      ${chart ? chart : `<div style="font-size:12px;color:var(--text-muted);text-align:center;padding:20px 0;">Registre seu peso por alguns dias pra ver o gráfico aqui.</div>`}
+    </div>
+
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px;">
+        <div style="font-size:12px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;font-weight:700;">Evolução do treino (30 dias)</div>
+        <div style="font-size:11.5px;color:var(--accent-energy);font-weight:700;">${trainingDays} dias treinados</div>
+      </div>
+      ${trainingHeatmapHTML(state.trainingHistory)}
+      <div style="display:flex;align-items:center;gap:6px;margin-top:10px;font-size:10.5px;color:var(--text-faint);">
+        <span style="width:10px;height:10px;border-radius:3px;background:var(--border);display:inline-block;"></span> sem treino
+        <span style="width:10px;height:10px;border-radius:3px;background:rgba(200,255,77,0.5);display:inline-block;margin-left:8px;"></span> parcial
+        <span style="width:10px;height:10px;border-radius:3px;background:var(--accent-energy);display:inline-block;margin-left:8px;"></span> completo
       </div>
     </div>
   `;
+  return html;
 }
 
 /* ============ TREINO ============ */
@@ -1018,67 +1060,4 @@ function trainingHeatmapHTML(history) {
       return `<div title="${label}" style="aspect-ratio:1;border-radius:4px;background:${bg};"></div>`;
     }).join("")}
   </div>`;
-}
-
-function renderProgresso() {
-  if (state.progressLoading || !state.progressLoaded) {
-    return `<div class="card" style="text-align:center;padding:30px 16px;color:var(--text-muted);font-size:13px;">Carregando progresso...</div>`;
-  }
-
-  const validWeights = state.weightHistory.filter((h) => h.kg != null);
-  const currentWeight = validWeights.length ? validWeights[validWeights.length - 1].kg : null;
-  const goal = state.config.weightGoal;
-  const diff = currentWeight != null && goal ? currentWeight - goal : null;
-
-  const chart = weightChartSVG(state.weightHistory);
-  const trainingDays = state.trainingHistory.filter((h) => h.exercises > 0).length;
-
-  return `
-    <div class="card">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
-        <div style="font-size:12px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;font-weight:700;">Peso</div>
-        <button data-action="toggle-weight-goal-edit" style="background:none;border:none;color:var(--text-faint);display:flex;align-items:center;gap:4px;font-size:11px;">${icon("pencil", 12)} Meta</button>
-      </div>
-      <div style="display:flex;gap:16px;align-items:center;flex-wrap:wrap;">
-        <div>
-          <div style="font-size:26px;font-weight:800;">${currentWeight != null ? currentWeight.toFixed(1) : "--"}<span style="font-size:13px;color:var(--text-muted);"> kg</span></div>
-          <div style="font-size:11px;color:var(--text-faint);">Peso atual</div>
-        </div>
-        <div style="width:1px;height:32px;background:var(--border);"></div>
-        <div>
-          <div style="font-size:20px;font-weight:800;color:var(--accent-energy);">${goal ? goal.toFixed(1) : "--"}<span style="font-size:12px;color:var(--text-muted);"> kg</span></div>
-          <div style="font-size:11px;color:var(--text-faint);">Meta</div>
-        </div>
-        ${diff != null ? `
-          <div style="margin-left:auto;text-align:right;">
-            <div style="font-size:14px;font-weight:700;color:${Math.abs(diff) < 0.3 ? "var(--accent-energy)" : "var(--text-muted)"};">${diff > 0 ? "+" : ""}${diff.toFixed(1)} kg</div>
-            <div style="font-size:10.5px;color:var(--text-faint);">${diff > 0 ? "acima da meta" : diff < 0 ? "abaixo da meta" : "na meta"}</div>
-          </div>` : ""}
-      </div>
-      ${state.showWeightGoalEdit ? `<div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border);">${goalInputHTML("Meta de peso (kg)", "goal-weight", state.config.weightGoal)}</div>` : ""}
-
-      <div style="display:flex;gap:8px;margin-top:14px;">
-        <input type="number" step="0.1" id="weight-input" data-model="weightInput" value="${escapeHtml(state.weightInput)}" placeholder="Registrar peso de hoje (kg)" />
-        <button data-action="save-weight" style="background:var(--accent-energy);color:#14161A;border:none;border-radius:8px;padding:0 16px;font-weight:800;font-size:12.5px;">Salvar</button>
-      </div>
-    </div>
-
-    <div class="card">
-      <div style="font-size:12px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;font-weight:700;margin-bottom:10px;">Evolução do peso (30 dias)</div>
-      ${chart ? chart : `<div style="font-size:12px;color:var(--text-muted);text-align:center;padding:20px 0;">Registre seu peso por alguns dias pra ver o gráfico aqui.</div>`}
-    </div>
-
-    <div class="card">
-      <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px;">
-        <div style="font-size:12px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;font-weight:700;">Evolução do treino (30 dias)</div>
-        <div style="font-size:11.5px;color:var(--accent-energy);font-weight:700;">${trainingDays} dias treinados</div>
-      </div>
-      ${trainingHeatmapHTML(state.trainingHistory)}
-      <div style="display:flex;align-items:center;gap:6px;margin-top:10px;font-size:10.5px;color:var(--text-faint);">
-        <span style="width:10px;height:10px;border-radius:3px;background:var(--border);display:inline-block;"></span> sem treino
-        <span style="width:10px;height:10px;border-radius:3px;background:rgba(200,255,77,0.5);display:inline-block;margin-left:8px;"></span> parcial
-        <span style="width:10px;height:10px;border-radius:3px;background:var(--accent-energy);display:inline-block;margin-left:8px;"></span> completo
-      </div>
-    </div>
-  `;
 }
