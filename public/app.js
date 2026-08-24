@@ -47,6 +47,8 @@ const state = {
   progressLoaded: false,
   progressLoading: false,
   weightHistory: [],
+  waterHistory: [],
+  showHistory: false,
   trainingHistory: [],
 };
 
@@ -211,6 +213,7 @@ async function loadProgressData() {
   }
   const weightEntries = await Promise.all(days.map((d) => loadKey(`weight:${d}`, null)));
   const workoutEntries = await Promise.all(days.map((d) => loadKey(`workout:${d}`, [])));
+  const waterEntries = await Promise.all(days.map((d) => loadKey(`water:${d}`, { ml: 0 })));
 
   state.weightHistory = days.map((d, i) => ({ date: d, kg: weightEntries[i] ? weightEntries[i].kg : null }));
   state.trainingHistory = days.map((d, i) => {
@@ -219,6 +222,7 @@ async function loadProgressData() {
     w.forEach((ex) => ex.sets.forEach((s) => { setsTotal++; if (s.done) setsDone++; }));
     return { date: d, exercises: w.length, setsDone, setsTotal };
   });
+  state.waterHistory = days.map((d, i) => ({ date: d, ml: (waterEntries[i] && waterEntries[i].ml) || 0 }));
 
   const todayEntry = state.weightHistory.find((h) => h.date === dk());
   state.weightInput = todayEntry && todayEntry.kg != null ? String(todayEntry.kg) : "";
@@ -322,13 +326,6 @@ function render() {
             <button class="icon-btn" data-action="logout" title="Sair">${icon("logout", 14)}</button>
           </div>
         </div>
-        ${state.tab !== "treino" && state.tab !== "dieta" ? `
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-top:14px;">
-            <button class="icon-btn" data-action="change-day" data-delta="-1">${icon("chevronLeft", 16)}</button>
-            <div style="font-size:13px;color:var(--text-muted);font-weight:600;text-transform:capitalize;">${fmtDate(state.selectedDate)}</div>
-            <button class="icon-btn" data-action="change-day" data-delta="1" style="opacity:${isToday() ? 0.3 : 1};">${icon("chevronRight", 16)}</button>
-          </div>
-        ` : ""}
       </div>
 
       <div class="scrollarea" style="flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:16px;" id="tab-content"></div>
@@ -473,8 +470,45 @@ function renderResumo() {
         <span style="width:10px;height:10px;border-radius:3px;background:var(--accent-energy);display:inline-block;margin-left:8px;"></span> completo
       </div>
     </div>
+
+    <div class="card">
+      <button data-action="toggle-history" style="display:flex;justify-content:space-between;align-items:center;width:100%;background:none;border:none;padding:0;">
+        <span style="font-size:12px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;font-weight:700;">Histórico (14 dias)</span>
+        <span style="color:var(--text-faint);font-size:11px;">${state.showHistory ? "▲" : "▼"}</span>
+      </button>
+      ${state.showHistory ? renderHistoryList() : ""}
+    </div>
   `;
   return html;
+}
+
+function renderHistoryList() {
+  const last14 = state.trainingHistory.slice(-14).map((t, i) => {
+    const offset = state.trainingHistory.length - 14 + i;
+    const water = state.waterHistory[offset] ? state.waterHistory[offset].ml : 0;
+    return { date: t.date, exercises: t.exercises, setsDone: t.setsDone, setsTotal: t.setsTotal, water };
+  }).reverse();
+
+  return `
+    <div style="display:flex;flex-direction:column;margin-top:10px;">
+      ${last14.map((d) => {
+        const trainDone = d.setsTotal > 0 && d.setsDone === d.setsTotal;
+        const trainPartial = d.setsTotal > 0 && d.setsDone > 0 && !trainDone;
+        const waterOk = state.config.waterGoal ? d.water >= state.config.waterGoal : false;
+        const dObj = new Date(d.date + "T00:00:00");
+        return `
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--border);">
+            <span style="font-size:12px;color:var(--text-muted);font-weight:600;text-transform:capitalize;width:64px;">${fmtDate(dObj)}</span>
+            <span style="font-size:11.5px;color:${waterOk ? "var(--accent-water)" : "var(--text-faint)"};display:flex;align-items:center;gap:4px;">
+              ${icon("droplet", 11, waterOk ? "var(--accent-water)" : "var(--text-faint)")} ${d.water}ml
+            </span>
+            <span style="font-size:11.5px;color:${trainDone ? "var(--accent-energy)" : trainPartial ? "#FFD166" : "var(--text-faint)"};display:flex;align-items:center;gap:4px;">
+              ${icon("dumbbell", 11, trainDone ? "var(--accent-energy)" : trainPartial ? "#FFD166" : "var(--text-faint)")}
+              ${trainDone ? "completo" : trainPartial ? `${d.setsDone}/${d.setsTotal}` : "—"}
+            </span>
+          </div>`;
+      }).join("")}
+    </div>`;
 }
 
 /* ============ TREINO ============ */

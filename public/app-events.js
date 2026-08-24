@@ -188,6 +188,7 @@ function handleTabClick(e) {
     case "toggle-water-goal-edit": state.showWaterGoalEdit = !state.showWaterGoalEdit; render(); break;
     case "apply-suggested-water-goal": updateConfig({ waterGoal: Number(btn.dataset.value) }).then(render); break;
     case "toggle-weight-goal-edit": state.showWeightGoalEdit = !state.showWeightGoalEdit; render(); break;
+    case "toggle-history": state.showHistory = !state.showHistory; render(); break;
     case "save-weight": saveWeight(); break;
   }
 }
