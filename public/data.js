@@ -588,6 +588,14 @@ const DEFAULT_PLANS = [
 // Agrupamento por categoria nutricional — usado pra sugerir trocas equivalentes
 // (ex: trocar arroz por batata-doce, ambos carboidratos; frango por peixe, ambos proteína).
 const FOOD_GROUP = {
+  // Itens adicionados na expansão da TACO completa
+  "Abiu cru": "fruta", "Caju cru": "fruta", "Figo cru": "fruta", "Kiwi cru": "fruta", "Umbu cru": "fruta", "Cacau cru": "fruta", "Jaca crua": "fruta", "Jambo cru": "fruta", "Melão cru": "fruta", "Pequi cru": "fruta", "Romã crua": "fruta", "Pinha crua": "fruta", "Abacate cru": "fruta", "Abacaxi cru": "fruta", "Ameixa crua": "fruta", "Cupuaçu cru": "fruta", "Jamelão cru": "fruta", "Morango cru": "fruta", "Acerola crua": "fruta", "Atemóia crua": "fruta", "Macaúba crua": "fruta", "Maracujá cru": "fruta", "Nêspera crua": "fruta", "Pitanga crua": "fruta", "Melancia crua": "fruta", "Tamarindo cru": "fruta", "Uva Rubi crua": "fruta", "Cajá-Manga cru": "fruta", "Carambola crua": "fruta", "Ciriguela crua": "fruta", "Fruta-pão crua": "fruta", "Pêra Park crua": "fruta", "Uva Itália crua": "fruta", "Banana figo crua": "fruta", "Banana maçã crua": "fruta",
+  "Aipo cru": "vegetal", "Alho cru": "vegetal", "Cará cru": "vegetal", "Jiló cru": "vegetal", "Nabo cru": "vegetal", "Agrião cru": "vegetal", "Caruru cru": "vegetal", "Chuchu cru": "vegetal", "Inhame cru": "vegetal", "Maxixe cru": "vegetal", "Pepino cru": "vegetal", "Quiabo cru": "vegetal", "Salsa crua": "vegetal", "Vagem crua": "vegetal", "Acelga crua": "vegetal", "Cará cozido": "vegetal", "Cebola crua": "vegetal", "Rúcula crua": "vegetal", "Taioba crua": "vegetal", "Tomate purê": "vegetal", "Almeirão cru": "vegetal", "Brócolis cru": "vegetal", "Rabanete cru": "vegetal", "Alfavaca crua": "vegetal", "Alho-poró cru": "vegetal", "Chicória crua": "vegetal", "Chuchu cozido": "vegetal", "Jurubeba crua": "vegetal", "Mandioca crua": "vegetal", "Polvilho doce": "vegetal", "Serralha crua": "vegetal", "Tomate salada": "vegetal", "Berinjela crua": "vegetal", "Beterraba crua": "vegetal", "Catalonha crua": "vegetal",
+  "Salame": "proteina", "Mortadela": "proteina", "Quibe cru": "proteina", "Apresuntado": "proteina", "Quibe frito": "proteina", "Quibe assado": "proteina", "Toucinho cru": "proteina", "Toucinho frito": "proteina", "Porco lombo cru": "proteina", "Porco pernil cru": "proteina", "Frango fígado cru": "proteina", "Frango coração cru": "proteina", "Peru congelado cru": "proteina", "Porco bisteca crua": "proteina", "Porco costela crua": "proteina", "Porco lombo assado": "proteina", "Lingüiça porco crua": "proteina", "Porco bisteca frita": "proteina", "Porco pernil assado": "proteina", "Lingüiça frango crua": "proteina", "Lingüiça porco frita": "proteina", "Porco costela assada": "proteina", "Croquete de carne cru": "proteina", "Hambúrguer bovino cru": "proteina", "Lingüiça frango frita": "proteina", "Peru congelado assado": "proteina", "Carne bovina bucho cru": "proteina", "Carne bovina cupim cru": "proteina", "Carne bovina seca crua": "proteina", "Frango filé à milanesa": "proteina", "Corimba cru": "proteina", "Pintado cru": "proteina", "Manjuba frita": "proteina", "Porquinho cru": "proteina", "Pintado assado": "proteina", "Sardinha frita": "proteina", "Atum fresco cru": "proteina", "Pescadinha crua": "proteina", "Sardinha assada": "proteina", "Cação posta crua": "proteina", "Corimbatá assado": "proteina", "Corimbatá cozido": "proteina", "Omelete de queijo": "proteina", "Ovo de codorna inteiro cru": "proteina", "Ovo de galinha inteiro cru": "proteina", "Ovo de galinha inteiro frito": "proteina", "Ovo de galinha gema cozida/10minutos": "proteina",
+  "Pão de soja": "carb", "Milho fubá cru": "carb", "Milho amido cru": "carb", "Milho verde cru": "carb", "Pão aveia forma": "carb", "Pão milho forma": "carb", "Arroz tipo 1 cru": "carb", "Arroz tipo 2 cru": "carb", "Bolo pronto coco": "carb", "Farinha de rosca": "carb", "Farinha de trigo": "carb", "Pão glúten forma": "carb", "Pão trigo sovado": "carb", "Aveia flocos crua": "carb", "Bolo mistura para": "carb", "Bolo pronto aipim": "carb", "Bolo pronto milho": "carb", "Creme de arroz pó": "carb",
+  "Guandu cru": "leguminosa", "Tremoço cru": "leguminosa", "Soja farinha": "leguminosa", "Lentilha crua": "leguminosa", "Feijão jalo cru": "leguminosa", "Feijão roxo cru": "leguminosa", "Paçoca amendoim": "leguminosa", "Ervilha em vagem": "leguminosa", "Feijão preto cru": "leguminosa", "Grão-de-bico cru": "leguminosa", "Amendoim grão cru": "leguminosa", "Feijão rajado cru": "leguminosa", "Feijão carioca cru": "leguminosa", "Feijão jalo cozido": "leguminosa",
+  "Queijo prato": "laticinio", "Queijo ricota": "laticinio", "Creme de Leite": "laticinio", "Leite de cabra": "laticinio", "Iogurte natural": "laticinio", "Queijo mozarela": "laticinio", "Queijo parmesão": "laticinio", "Leite condensado": "laticinio", "Leite fermentado": "laticinio", "Queijo pasteurizado": "laticinio", "Bebida láctea pêssego": "laticinio", "Iogurte sabor morango": "laticinio", "Iogurte sabor pêssego": "laticinio", "Queijo minas meia cura": "laticinio",
+  "Coco cru": "gordura", "Noz crua": "gordura", "Pinhão cozido": "gordura", "Pupunha cozida": "gordura", "Linhaça semente": "gordura", "Gergelim semente": "gordura", "Amêndoa torrada salgada": "gordura", "Castanha-do-Brasil crua": "gordura", "Manteiga com sal": "gordura", "Manteiga sem sal": "gordura", "Margarina com óleo hidrogenado com sal (65% de lipídeos)": "gordura", "Margarina com óleo hidrogenado sem sal (80% de lipídeos)": "gordura", "Margarina com óleo interesterificado com sal (65%de lipídeos)": "gordura",
   "Arroz branco cozido": "carb", "Arroz integral cozido": "carb", "Macarrão cozido": "carb",
   "Aveia em flocos": "carb", "Pão francês": "carb", "Pão de forma integral": "carb",
   "Tapioca (goma hidratada)": "carb", "Batata inglesa cozida": "carb", "Batata doce cozida": "carb",
@@ -835,10 +843,23 @@ function generateAutoDiet(form) {
   }
 
   let calorieGoal = tdee + adjust;
-  calorieGoal = Math.max(1200, Math.round(calorieGoal / 10) * 10);
+  // Piso calórico de segurança clínica: abaixo disso não é recomendável mesmo em déficit
+  // (referência comum: 1200kcal mulheres / 1500kcal homens como mínimo absoluto).
+  const calorieFloor = isMale ? 1500 : 1200;
+  calorieGoal = Math.max(calorieFloor, Math.round(calorieGoal / 10) * 10);
 
-  const proteinGoal = Math.round(peso * (form.objetivo === "Ganho de massa" ? 2.2 : 2.0));
-  const fatGoal = Math.round(peso * 0.8);
+  // Proteína por objetivo, em g/kg — faixas baseadas na posição da ISSN (International
+  // Society of Sports Nutrition): mais alta no déficit pra preservar massa magra,
+  // moderada na manutenção e no ganho (acima disso não traz benefício extra comprovado).
+  const proteinPerKg = { "Emagrecimento": 2.2, "Manutenção": 1.8, "Ganho de massa": 2.0 }[form.objetivo] || 1.8;
+  const proteinGoal = Math.round(peso * proteinPerKg);
+
+  // Gordura: usa o maior entre 0.8g/kg e o piso de 20% das calorias totais — abaixo
+  // disso pode comprometer produção hormonal (recomendação comum de nutrição esportiva).
+  const fatFromWeight = peso * 0.8;
+  const fatFloorFromCalories = (calorieGoal * 0.20) / 9;
+  const fatGoal = Math.round(Math.max(fatFromWeight, fatFloorFromCalories));
+
   const carbGoal = Math.max(50, Math.round((calorieGoal - proteinGoal * 4 - fatGoal * 9) / 4));
 
   const n = Math.min(6, Math.max(2, Number(form.refeicoes) || 4));
