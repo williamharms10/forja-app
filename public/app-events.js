@@ -87,14 +87,20 @@ function handleTabClick(e) {
     case "apply-workout-gen": {
       const generated = state.workoutGenResult;
       const next = [...state.plans, ...generated];
-      saveKey("plans", next).then(() => {
+      saveKey("plans", next).then(async () => {
         state.plans = next;
         state.workoutGenResult = null;
         state.showWorkoutGenForm = false;
-        // Já ativa o primeiro treino da divisão gerada como o treino atual —
-        // sem isso, o plano ficava salvo mas nunca "ligado" de verdade.
-        if (generated && generated.length > 0) startPlan(generated[0]);
-        else render();
+        if (generated && generated.length > 0) {
+          // Liga a continuidade automática usando os treinos recém-gerados —
+          // assim, o próximo dia que você abrir o app já vem com o treino
+          // seguinte da sequência, sem precisar gerar de novo toda vez.
+          state.workoutRotation = { active: true, planIds: generated.map((p) => p.id), position: 1 };
+          await saveKey("workoutRotation", state.workoutRotation);
+          startPlan(generated[0]);
+        } else {
+          render();
+        }
       });
       break;
     }
