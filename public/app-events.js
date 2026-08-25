@@ -260,9 +260,10 @@ function startPlan(plan) {
   const seeded = plan.exercises.map((ex) => {
     const numSets = ex.sets || defaultSets;
     const numReps = ex.reps || defaultReps;
+    const suggestedWeight = state.lastWeights[ex.name] || 0;
     return {
       id: uid(), name: ex.name, muscle: ex.muscle,
-      sets: Array.from({ length: numSets }, () => ({ reps: numReps, weight: 0, done: false })),
+      sets: Array.from({ length: numSets }, () => ({ reps: numReps, weight: suggestedWeight, done: false })),
     };
   });
   updateWorkout(seeded).then(async () => {

@@ -48,6 +48,7 @@ const state = {
   progressLoading: false,
   weightHistory: [],
   waterHistory: [],
+  lastWeights: {},
   showHistory: false,
   trainingHistory: [],
 };
@@ -95,9 +96,9 @@ auth.onAuthStateChanged(async (user) => {
     await saveKey("plans", DEFAULT_PLANS);
   }
   state.workoutRotation = await loadKey("workoutRotation", null);
+  await loadProgressData();
   await loadDayData();
   await computeStreak();
-  await loadProgressData();
   render();
 });
 
@@ -143,9 +144,10 @@ async function loadDayData() {
       const seededWorkout = rotResult.plan.exercises.map((ex) => {
         const numSets = ex.sets || defaultSets;
         const numReps = ex.reps || defaultReps;
+        const suggestedWeight = state.lastWeights[ex.name] || 0;
         return {
           id: uid(), name: ex.name, muscle: ex.muscle,
-          sets: Array.from({ length: numSets }, () => ({ reps: numReps, weight: 0, done: false })),
+          sets: Array.from({ length: numSets }, () => ({ reps: numReps, weight: suggestedWeight, done: false })),
         };
       });
       state.workout = seededWorkout;
@@ -222,6 +224,19 @@ async function loadProgressData() {
     w.forEach((ex) => ex.sets.forEach((s) => { setsTotal++; if (s.done) setsDone++; }));
     return { date: d, exercises: w.length, setsDone, setsTotal };
   });
+
+  // Guarda o último peso usado em cada exercício (dos últimos 30 dias) — assim,
+  // da próxima vez que esse exercício aparecer, já sugerimos o peso certo em vez
+  // de sempre voltar pra zero. "days" vai do mais antigo pro mais recente, então
+  // a última atribuição pra cada nome sempre vence (fica com a mais nova).
+  const lastWeights = {};
+  workoutEntries.forEach((w) => {
+    (w || []).forEach((ex) => {
+      const doneWeights = ex.sets.filter((s) => s.done && s.weight > 0).map((s) => s.weight);
+      if (doneWeights.length > 0) lastWeights[ex.name] = Math.max(...doneWeights);
+    });
+  });
+  state.lastWeights = lastWeights;
   state.waterHistory = days.map((d, i) => ({ date: d, ml: (waterEntries[i] && waterEntries[i].ml) || 0 }));
 
   const todayEntry = state.weightHistory.find((h) => h.date === dk());
