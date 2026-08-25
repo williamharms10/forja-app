@@ -15,7 +15,7 @@ const state = {
   extraLocalFilter: "Ambos",
   newPlanLocalFilter: "Ambos",
   showWorkoutGenForm: false,
-  workoutGenForm: { objetivo: "Manutenção", local: "Ambos", dias: 3 },
+  workoutGenForm: { objetivo: "Manutenção", local: "Ambos", dias: 3, nivel: "Intermediário" },
   workoutGenResult: null,
   workoutRotation: null,
   rotationExpired: false,
@@ -756,6 +756,10 @@ function renderWorkoutGenerator() {
             <label style="font-size:10.5px;color:var(--text-faint);">Dias por semana</label>
             <input type="number" id="wg-dias" data-model="workoutGenForm.dias" value="${f.dias}" min="2" max="6" />
           </div>
+        </div>
+        <div>
+          <label style="font-size:10.5px;color:var(--text-faint);">Nível de experiência</label>
+          <select id="wg-nivel" data-model="workoutGenForm.nivel">${selectOptionsHTML(["Iniciante", "Intermediário", "Avançado"], f.nivel)}</select>
         </div>
         <button data-action="gerar-treino-auto" class="btn-primary" style="background:var(--accent-energy);margin-top:4px;">Gerar divisão de treino</button>
 

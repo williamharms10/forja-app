@@ -1,7 +1,7 @@
-const MUSCLES = ["Peito", "Costas", "Perna", "Ombro", "Braço", "Core", "Cardio", "Pliometria", "Alongamento"];
+const MUSCLES = ["Peito", "Costas", "Perna", "Ombro", "Bíceps", "Tríceps", "Core", "Cardio", "Pliometria", "Alongamento"];
 const MUSCLE_COLOR = {
   Peito: "#FF7A52", Costas: "#4FA8FF", Perna: "#C8FF4D",
-  Ombro: "#FFD166", Braço: "#FF5C8A", Core: "#8B8F97", Cardio: "#4FE3C2",
+  Ombro: "#FFD166", Bíceps: "#FF5C8A", Tríceps: "#C77DFF", Core: "#8B8F97", Cardio: "#4FE3C2",
   Pliometria: "#FF3B5C", Alongamento: "#7FD8E8",
 };
 const LOCAIS = ["Ambos", "Academia", "Casa"];
@@ -136,15 +136,15 @@ const EXERCISE_DB = [
   { name: "Face pull", muscle: "Ombro", local: "Academia", enQuery: "face pull" },
   { name: "Encolhimento de trapézio", muscle: "Ombro", local: "Academia", enQuery: "shrug" },
   // Braço
-  { name: "Rosca direta (barra)", muscle: "Braço", local: "Academia", enQuery: "barbell curl" },
-  { name: "Rosca alternada (halteres)", muscle: "Braço", local: "Academia", enQuery: "alternate dumbbell curl" },
-  { name: "Rosca martelo", muscle: "Braço", local: "Academia", enQuery: "hammer curl" },
-  { name: "Rosca scott", muscle: "Braço", local: "Academia", enQuery: "preacher curl" },
-  { name: "Tríceps testa", muscle: "Braço", local: "Academia", enQuery: "lying triceps extension" },
-  { name: "Tríceps corda (pulley)", muscle: "Braço", local: "Academia", enQuery: "triceps pushdown" },
-  { name: "Tríceps francês", muscle: "Braço", local: "Academia", enQuery: "overhead triceps extension" },
-  { name: "Mergulho no banco (dips)", muscle: "Braço", local: "Ambos", enQuery: "bench dip" },
-  { name: "Dips entre duas cadeiras", muscle: "Braço", local: "Casa", enQuery: "chair dip" },
+  { name: "Rosca direta (barra)", muscle: "Bíceps", local: "Academia", enQuery: "barbell curl" },
+  { name: "Rosca alternada (halteres)", muscle: "Bíceps", local: "Academia", enQuery: "alternate dumbbell curl" },
+  { name: "Rosca martelo", muscle: "Bíceps", local: "Academia", enQuery: "hammer curl" },
+  { name: "Rosca scott", muscle: "Bíceps", local: "Academia", enQuery: "preacher curl" },
+  { name: "Tríceps testa", muscle: "Tríceps", local: "Academia", enQuery: "lying triceps extension" },
+  { name: "Tríceps corda (pulley)", muscle: "Tríceps", local: "Academia", enQuery: "triceps pushdown" },
+  { name: "Tríceps francês", muscle: "Tríceps", local: "Academia", enQuery: "overhead triceps extension" },
+  { name: "Mergulho no banco (dips)", muscle: "Tríceps", local: "Ambos", enQuery: "bench dip" },
+  { name: "Dips entre duas cadeiras", muscle: "Tríceps", local: "Casa", enQuery: "chair dip" },
   // Core
   { name: "Abdominal supra", muscle: "Core", local: "Ambos", enQuery: "crunch" },
   { name: "Abdominal infra", muscle: "Core", local: "Ambos", enQuery: "reverse crunch" },
@@ -199,9 +199,9 @@ const EXERCISE_DB = [
   { name: "Mesa flexora em pé (unilateral)", muscle: "Perna", local: "Academia", enQuery: "standing leg curl" },
   { name: "Desenvolvimento articulado (máquina)", muscle: "Ombro", local: "Academia", enQuery: "hammer strength shoulder press" },
   { name: "Elevação lateral na máquina", muscle: "Ombro", local: "Academia", enQuery: "lateral raise machine" },
-  { name: "Mergulho assistido (graviton)", muscle: "Braço", local: "Academia", enQuery: "assisted dip machine" },
-  { name: "Tríceps na polia alta (corda unilateral)", muscle: "Braço", local: "Academia", enQuery: "single arm triceps pushdown" },
-  { name: "Rosca na polia baixa", muscle: "Braço", local: "Academia", enQuery: "cable curl" },
+  { name: "Mergulho assistido (graviton)", muscle: "Tríceps", local: "Academia", enQuery: "assisted dip machine" },
+  { name: "Tríceps na polia alta (corda unilateral)", muscle: "Tríceps", local: "Academia", enQuery: "single arm triceps pushdown" },
+  { name: "Rosca na polia baixa", muscle: "Bíceps", local: "Academia", enQuery: "cable curl" },
   { name: "Abdominal na polia (cable crunch)", muscle: "Core", local: "Academia", enQuery: "cable crunch" },
   { name: "Rotativo de tronco (máquina)", muscle: "Core", local: "Academia", enQuery: "torso rotation machine" },
   { name: "Cadeira romana (elevação de joelhos)", muscle: "Core", local: "Academia", enQuery: "captains chair leg raise" },
@@ -225,8 +225,8 @@ const DEFAULT_PLANS = [
       { name: "Supino reto", muscle: "Peito" },
       { name: "Supino inclinado", muscle: "Peito" },
       { name: "Crucifixo reto", muscle: "Peito" },
-      { name: "Tríceps corda (pulley)", muscle: "Braço" },
-      { name: "Tríceps testa", muscle: "Braço" },
+      { name: "Tríceps corda (pulley)", muscle: "Tríceps" },
+      { name: "Tríceps testa", muscle: "Tríceps" },
     ],
   },
   {
@@ -235,8 +235,8 @@ const DEFAULT_PLANS = [
       { name: "Puxada frontal (pulley)", muscle: "Costas" },
       { name: "Remada curvada", muscle: "Costas" },
       { name: "Remada unilateral (serrote)", muscle: "Costas" },
-      { name: "Rosca direta (barra)", muscle: "Braço" },
-      { name: "Rosca martelo", muscle: "Braço" },
+      { name: "Rosca direta (barra)", muscle: "Bíceps" },
+      { name: "Rosca martelo", muscle: "Bíceps" },
     ],
   },
   {
@@ -343,17 +343,17 @@ function calcWaterGoal(kg) {
 /* ---------------- GERADOR AUTOMÁTICO DE TREINO (100% local, sem IA/API paga) ---------------- */
 const SPLIT_TEMPLATES = {
   2: [
-    { label: "Treino A — Corpo todo", muscles: ["Peito", "Costas", "Perna"] },
-    { label: "Treino B — Corpo todo", muscles: ["Ombro", "Braço", "Core", "Perna"] },
+    { label: "Treino A — Corpo todo (empurrar)", muscles: ["Peito", "Perna", "Ombro", "Tríceps"] },
+    { label: "Treino B — Corpo todo (puxar)", muscles: ["Costas", "Perna", "Bíceps", "Core"] },
   ],
   3: [
-    { label: "Treino A — Peito e Tríceps", muscles: ["Peito", "Braço"] },
-    { label: "Treino B — Costas e Bíceps", muscles: ["Costas", "Braço"] },
-    { label: "Treino C — Perna e Ombro", muscles: ["Perna", "Ombro"] },
+    { label: "Treino A — Push (Peito, Ombro, Tríceps)", muscles: ["Peito", "Ombro", "Tríceps"] },
+    { label: "Treino B — Pull (Costas, Bíceps)", muscles: ["Costas", "Bíceps"] },
+    { label: "Treino C — Legs (Perna)", muscles: ["Perna", "Core"] },
   ],
   4: [
-    { label: "Treino A — Peito e Tríceps", muscles: ["Peito", "Braço"] },
-    { label: "Treino B — Costas e Bíceps", muscles: ["Costas", "Braço"] },
+    { label: "Treino A — Peito e Tríceps", muscles: ["Peito", "Tríceps"] },
+    { label: "Treino B — Costas e Bíceps", muscles: ["Costas", "Bíceps"] },
     { label: "Treino C — Perna", muscles: ["Perna"] },
     { label: "Treino D — Ombro e Core", muscles: ["Ombro", "Core"] },
   ],
@@ -361,16 +361,16 @@ const SPLIT_TEMPLATES = {
     { label: "Treino A — Peito", muscles: ["Peito"] },
     { label: "Treino B — Costas", muscles: ["Costas"] },
     { label: "Treino C — Perna", muscles: ["Perna"] },
-    { label: "Treino D — Ombro", muscles: ["Ombro"] },
-    { label: "Treino E — Braço e Core", muscles: ["Braço", "Core"] },
+    { label: "Treino D — Ombro e Tríceps", muscles: ["Ombro", "Tríceps"] },
+    { label: "Treino E — Bíceps e Core", muscles: ["Bíceps", "Core"] },
   ],
   6: [
-    { label: "Treino A — Peito", muscles: ["Peito"] },
-    { label: "Treino B — Costas", muscles: ["Costas"] },
-    { label: "Treino C — Perna", muscles: ["Perna"] },
-    { label: "Treino D — Ombro", muscles: ["Ombro"] },
-    { label: "Treino E — Braço", muscles: ["Braço"] },
-    { label: "Treino F — Core e Cardio", muscles: ["Core", "Cardio"] },
+    { label: "Treino A — Push (Peito, Ombro, Tríceps)", muscles: ["Peito", "Ombro", "Tríceps"] },
+    { label: "Treino B — Pull (Costas, Bíceps)", muscles: ["Costas", "Bíceps"] },
+    { label: "Treino C — Legs (Perna)", muscles: ["Perna"] },
+    { label: "Treino D — Push (Peito, Ombro, Tríceps)", muscles: ["Peito", "Ombro", "Tríceps"] },
+    { label: "Treino E — Pull (Costas, Bíceps)", muscles: ["Costas", "Bíceps"] },
+    { label: "Treino F — Legs e Core", muscles: ["Perna", "Core"] },
   ],
 };
 
@@ -391,11 +391,26 @@ function repsForGoal(objetivo, isCompound) {
   return table[objetivo] || 12;
 }
 
+function shuffleArray(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function exercisesPerMuscleForLevel(nivel, numMuscles) {
+  const base = { "Iniciante": 4, "Intermediário": 6, "Avançado": 8 }[nivel] || 6;
+  return Math.max(nivel === "Iniciante" ? 1 : 2, Math.floor(base / numMuscles));
+}
+
 function generateWorkoutSplit(form) {
   const dias = Math.min(6, Math.max(2, Number(form.dias) || 3));
   const templates = SPLIT_TEMPLATES[dias];
   const local = form.local || "Ambos";
   const objetivo = form.objetivo || "Manutenção";
+  const nivel = form.nivel || "Intermediário";
 
   const pool = local === "Ambos" ? EXERCISE_DB : EXERCISE_DB.filter((e) => e.local === local || e.local === "Ambos");
 
@@ -403,9 +418,11 @@ function generateWorkoutSplit(form) {
     let exercises = [];
     tpl.muscles.forEach((m) => {
       const candidates = pool.filter((e) => e.muscle === m);
-      const perMuscle = Math.max(2, Math.floor(6 / tpl.muscles.length));
-      candidates.slice(0, perMuscle).forEach((e, i) => {
-        const isCompound = i === 0; // primeiro da lista pro grupo = exercício principal
+      const perMuscle = exercisesPerMuscleForLevel(nivel, tpl.muscles.length);
+      // Embaralha as opções pra dar variedade a cada geração — sem isso, sempre
+      // vinham os mesmos exercícios (os primeiros da base), toda vez.
+      shuffleArray(candidates).slice(0, perMuscle).forEach((e, i) => {
+        const isCompound = i === 0; // primeiro sorteado do grupo = exercício principal
         exercises.push({
           name: e.name, muscle: e.muscle,
           sets: setsForGoal(objetivo, isCompound),
@@ -416,11 +433,12 @@ function generateWorkoutSplit(form) {
     if (objetivo === "Emagrecimento") {
       const extra = pool.filter((e) => e.muscle === "Pliometria" || e.muscle === "Cardio");
       if (extra.length > 0) {
-        const e = extra[idx % extra.length];
+        const e = shuffleArray(extra)[idx % extra.length];
         exercises.push({ name: e.name, muscle: e.muscle, sets: 3, reps: 15 });
       }
     }
-    exercises = exercises.slice(0, 6);
+    const maxExercises = nivel === "Avançado" ? 8 : nivel === "Iniciante" ? 5 : 6;
+    exercises = exercises.slice(0, maxExercises);
     return {
       id: uid(), name: tpl.label, muscle: tpl.muscles[0],
       exercises,
